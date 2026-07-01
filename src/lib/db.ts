@@ -178,6 +178,13 @@ export async function getAllClientSettings(): Promise<ClientSettingsRow[]> {
   return rows as ClientSettingsRow[];
 }
 
+export async function resetClient(clientId: string): Promise<void> {
+  const sql = await db();
+  await sql`DELETE FROM webhook_events WHERE client_id = ${clientId}`;
+  await sql`DELETE FROM connectors WHERE client_id = ${clientId}`;
+  await sql`DELETE FROM client_settings WHERE client_id = ${clientId}`;
+}
+
 export async function upsertClientSettings(
   clientId: string,
   data: { status?: string; serviceType?: string }
