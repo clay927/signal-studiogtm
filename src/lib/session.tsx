@@ -90,10 +90,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Always expose a VALID client id (never "" before the effect runs), so pages
+  // never read data for a missing client and crash right after login.
+  const activeClientId = clientId && clients.includes(clientId) ? clientId : clients[0] ?? "";
+
   const value: SessionState = {
     user,
     role: user.role,
-    clientId,
+    clientId: activeClientId,
     setClientId,
     clients,
     range,

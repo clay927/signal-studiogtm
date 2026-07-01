@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { CLIENTS } from "./data";
+import { CLIENTS, CLIENT_ORDER } from "./data";
 import { deriveResults } from "./metrics";
 import type { ClientData, Meeting } from "./types";
 
@@ -73,7 +73,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const getClientData = useCallback(
     (clientId: string): ClientData => {
-      const base = CLIENTS[clientId];
+      const base = CLIENTS[clientId] ?? CLIENTS[CLIENT_ORDER[0]];
       const imp = imports[clientId];
       if (!imp) return base;
       return {
