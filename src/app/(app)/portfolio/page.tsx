@@ -6,6 +6,7 @@ import { CLIENTS, CLIENT_ORDER } from "@/lib/data";
 import { Card, StatTile, SampleBadge, HealthDot, Pill, EmptyState, UpdatedStamp } from "@/components/ui";
 import { money, num, pct } from "@/lib/format";
 import type { ClientStatus } from "@/lib/types";
+import { holdStatus } from "@/lib/metrics";
 import { AlertTriangle } from "lucide-react";
 import clsx from "clsx";
 
@@ -15,12 +16,6 @@ const STATUS_META: Record<ClientStatus, { dot: "good" | "warn" | "bad" | "neutra
   at_risk: { dot: "bad", label: "At risk", tone: "bad" },
   churned: { dot: "bad", label: "Churned", tone: "bad" },
 };
-
-function holdStatus(v: number): "good" | "warn" | "bad" {
-  if (v >= 82) return "good";
-  if (v >= 65) return "warn";
-  return "bad";
-}
 
 export default function PortfolioPage() {
   const { user, setClientId } = useSession();

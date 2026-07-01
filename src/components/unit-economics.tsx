@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { UnitEconomics } from "@/lib/types";
 import { Card } from "@/components/ui";
 import { money } from "@/lib/format";
+import { projectUnitEconomics } from "@/lib/metrics";
 
 function Slider({
   label,
@@ -59,12 +60,20 @@ export function UnitEconomicsCalc({ base }: { base: UnitEconomics }) {
   const [deal, setDeal] = useState(base.avgDealValue);
   const [cost, setCost] = useState(base.programCost);
 
-  const held = meetings * (showRate / 100);
-  const wins = held * (oppToWin / 100);
-  const monthlyRevenue = wins * deal;
-  const roi = cost > 0 ? monthlyRevenue / cost : 0;
-  const costPerMeeting = held > 0 ? cost / held : 0;
-  const annual = monthlyRevenue * 12;
+  const {
+    meetingsHeld: held,
+    newCustomers: wins,
+    monthlyRevenue,
+    annualRevenue: annual,
+    roi,
+    costPerMeeting,
+  } = projectUnitEconomics({
+    meetingsPerMonth: meetings,
+    showRate,
+    oppToWin,
+    avgDealValue: deal,
+    programCost: cost,
+  });
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

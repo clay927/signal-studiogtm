@@ -5,6 +5,7 @@ import { useSession } from "@/lib/session";
 import { CLIENTS } from "@/lib/data";
 import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill, EmptyState } from "@/components/ui";
 import { num, ratePct, shortDate } from "@/lib/format";
+import { capacity as leadCapacity } from "@/lib/metrics";
 import { Phone, Mail, Contact, Users } from "lucide-react";
 import clsx from "clsx";
 
@@ -148,8 +149,7 @@ function RepliesList({ data, channel }: { data: (typeof CLIENTS)[string]; channe
 
 function ActiveLeads({ data }: { data: (typeof CLIENTS)[string] }) {
   const a = data.activeLeads;
-  const capacity = Math.min(100, Math.round((a.attempting / a.target) * 100));
-  const capStatus = capacity >= 90 ? "good" : capacity >= 70 ? "warn" : "bad";
+  const { pct: capacity, status: capStatus } = leadCapacity(a.attempting, a.target);
   const total = a.statuses.reduce((s, x) => s + x.count, 0) || 1;
 
   return (

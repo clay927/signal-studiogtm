@@ -7,13 +7,8 @@ import { WinsFeed } from "@/components/wins-feed";
 import { BenchmarkBars } from "@/components/benchmark-bars";
 import { ProjectTracker } from "@/components/project-tracker";
 import { money, num, pct } from "@/lib/format";
+import { holdStatus } from "@/lib/metrics";
 import { ListChecks, Rocket } from "lucide-react";
-
-function holdStatus(v: number): "good" | "warn" | "bad" {
-  if (v >= 82) return "good";
-  if (v >= 65) return "warn";
-  return "bad";
-}
 
 export default function HomePage() {
   const { clientId } = useSession();

@@ -6,15 +6,10 @@ import { CLIENTS } from "@/lib/data";
 import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill, EmptyState } from "@/components/ui";
 import { MeetingDetail, STAGE_LABEL } from "@/components/meeting-detail";
 import { money, num, pct, shortDate } from "@/lib/format";
+import { holdStatus } from "@/lib/metrics";
 import type { Meeting } from "@/lib/types";
 import { Trophy } from "lucide-react";
 import clsx from "clsx";
-
-function holdStatus(v: number): "good" | "warn" | "bad" {
-  if (v >= 82) return "good";
-  if (v >= 65) return "warn";
-  return "bad";
-}
 
 export default function ResultsPage() {
   const { clientId } = useSession();
