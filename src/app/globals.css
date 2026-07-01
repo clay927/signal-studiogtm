@@ -1,26 +1,136 @@
 @import "tailwindcss";
 
+/*
+  Signal design tokens — StudioGTM brand DNA.
+  Warm command center: ivory canvas, navy structure, gold for what matters.
+  Every token has a light + dark value so each user can pick their mode.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page: #f7f2e7;
+  --surface: #ffffff;
+  --surface-2: #fbf8f1;
+  --sidebar: #13314c;
+  --sidebar-ink: #8fa6bc;
+  --sidebar-ink-active: #f5ead0;
+
+  --ink: #14263c;
+  --ink-2: #55636f;
+  --ink-3: #8a96a0;
+
+  --navy: #13314c;
+  --navy-deep: #0f2440;
+  --gold: #b8892b;
+  --gold-soft: #f5ead0;
+  --gold-line: #e3ce9b;
+
+  --border: #ece6d8;
+  --border-strong: #ddd4be;
+
+  --good: #0ca30c;
+  --good-ink: #157f3c;
+  --good-soft: #e7f3e4;
+  --warn: #d99413;
+  --warn-ink: #9a6a0e;
+  --warn-soft: #faf0d8;
+  --bad: #d03b3b;
+  --bad-ink: #a32d2d;
+  --bad-soft: #fbe9e9;
+
+  --radius: 12px;
+}
+
+.dark {
+  --page: #0b1a2b;
+  --surface: #12283f;
+  --surface-2: #0f2338;
+  --sidebar: #081324;
+  --sidebar-ink: #7e97af;
+  --sidebar-ink-active: #f0dcae;
+
+  --ink: #f2efe7;
+  --ink-2: #a7bacd;
+  --ink-3: #7890a6;
+
+  --navy: #16324f;
+  --navy-deep: #0a1626;
+  --gold: #d8b15a;
+  --gold-soft: #23344a;
+  --gold-line: #4a3f22;
+
+  --border: #223f5c;
+  --border-strong: #2f5375;
+
+  --good: #56c26a;
+  --good-ink: #7fc48a;
+  --good-soft: #14352a;
+  --warn: #e0b84e;
+  --warn-ink: #e0b84e;
+  --warn-soft: #33301a;
+  --bad: #e57373;
+  --bad-ink: #e88a8a;
+  --bad-soft: #3a2020;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-ink-active: var(--sidebar-ink-active);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-line: var(--gold-line);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-good: var(--good);
+  --color-good-ink: var(--good-ink);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-ink: var(--bad-ink);
+  --color-bad-soft: var(--bad-soft);
+  --radius-card: 12px;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--navy);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.serif {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
 }
