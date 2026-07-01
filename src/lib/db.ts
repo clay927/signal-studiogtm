@@ -55,6 +55,8 @@ const SCHEMA_STATEMENTS = [
      status text NOT NULL DEFAULT 'active',
      created_at timestamptz NOT NULL DEFAULT now()
    )`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token text NOT NULL DEFAULT ''`,
 ];
 
 let schemaPromise: Promise<void> | null = null;
@@ -252,6 +254,55 @@ export async function upsertUser(u: {
 export async function deleteUser(id: string): Promise<void> {
   const sql = await db();
   await sql`DELETE FROM users WHERE id = ${id}`;
+}
+
+// ---- Auth ----
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  client_access: string[];
+  status: string;
+  password_hash: string;
+}
+
+export async function getUserByEmail(email: string): Promise<AuthUser | null> {
+  const sql = await db();
+  const rows = await sql`
+    SELECT id, name, email, role, client_access, status, password_hash
+    FROM users WHERE lower(email) = lower(${email}) LIMIT 1
+  `;
+  return (rows[0] as AuthUser) ?? null;
+}
+
+export async function getUserById(id: string): Promise<AuthUser | null> {
+  const sql = await db();
+  const rows = await sql`
+    SELECT id, name, email, role, client_access, status, password_hash
+    FROM users WHERE id = ${id} LIMIT 1
+  `;
+  return (rows[0] as AuthUser) ?? null;
+}
+
+export async function getUserByInviteToken(token: string): Promise<AuthUser | null> {
+  const sql = await db();
+  const rows = await sql`
+    SELECT id, name, email, role, client_access, status, password_hash
+    FROM users WHERE invite_token = ${token} AND invite_token <> '' LIMIT 1
+  `;
+  return (rows[0] as AuthUser) ?? null;
+}
+
+export async function setPassword(id: string, passwordHash: string): Promise<void> {
+  const sql = await db();
+  await sql`UPDATE users SET password_hash = ${passwordHash}, invite_token = '', status = 'active' WHERE id = ${id}`;
+}
+
+export async function setInviteToken(id: string, token: string): Promise<void> {
+  const sql = await db();
+  await sql`UPDATE users SET invite_token = ${token} WHERE id = ${id}`;
 }
 
 // Rule: when a client is paused/inactive, deactivate its client-side users and

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CLIENTS, CLIENT_ORDER } from "@/lib/data";
 import { ROLE_LABELS } from "@/lib/session";
 import { Card, SectionTitle, Pill } from "@/components/ui";
-import { ShieldCheck, Plus, Trash2, KeyRound } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, Link2, Copy, Check } from "lucide-react";
 import type { Role } from "@/lib/types";
 
 interface UserRow {
@@ -23,6 +23,8 @@ export function UserManager() {
   const [dbDown, setDbDown] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [link, setLink] = useState<{ id: string; url: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [form, setForm] = useState<{ name: string; email: string; role: Role; access: string[] }>({
     name: "",
     email: "",
@@ -59,6 +61,25 @@ export function UserManager() {
   async function remove(id: string) {
     await fetch(`/api/users?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     await load();
+  }
+
+  async function inviteLink(email: string, id: string) {
+    setCopied(false);
+    const res = await fetch("/api/auth/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setLink({ id, url: data.link });
+      try {
+        await navigator.clipboard.writeText(data.link);
+        setCopied(true);
+      } catch {
+        // clipboard blocked — link still shown to copy manually
+      }
+    }
   }
 
   async function addUser() {
@@ -143,6 +164,17 @@ export function UserManager() {
         </div>
       )}
 
+      {link && (
+        <div className="mb-4 rounded-[12px] border border-gold-line bg-gold-soft p-3">
+          <div className="mb-1 flex items-center gap-1.5 text-[12.5px] font-medium text-gold">
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Invite link copied — send it to the user" : "Invite link (copy and send to the user)"}
+          </div>
+          <code className="block break-all rounded-[8px] border border-border bg-surface px-3 py-2 text-[12px] text-ink">{link.url}</code>
+          <p className="mt-1 text-[11px] text-ink-3">They open this to set a password and sign in. (Automated email invites come with an email provider.)</p>
+        </div>
+      )}
+
       {!loaded ? (
         <p className="text-[13px] text-ink-3">Loading…</p>
       ) : (
@@ -187,7 +219,7 @@ export function UserManager() {
                   </td>
                   <td className="py-2.5 pl-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button title="Reset password" className="text-gold hover:opacity-80"><KeyRound size={15} /></button>
+                      <button title="Copy invite / reset link" onClick={() => inviteLink(u.email, u.id)} className="text-gold hover:opacity-80"><Link2 size={15} /></button>
                       <button title="Remove" onClick={() => remove(u.id)} className="text-ink-3 hover:text-bad-ink"><Trash2 size={15} /></button>
                     </div>
                   </td>

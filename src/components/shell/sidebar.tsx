@@ -15,13 +15,12 @@ import {
   Sun,
   Moon,
   Monitor,
-  UserCog,
+  LogOut,
   Upload,
 } from "lucide-react";
 import { useSession, ROLE_LABELS } from "@/lib/session";
 import { Menu, MenuItem, MenuLabel } from "@/components/menu";
 import { initials } from "@/lib/format";
-import type { Role } from "@/lib/types";
 
 const NAV = [
   { href: "/", label: "Home", icon: LayoutDashboard },
@@ -33,7 +32,7 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, role, setRole } = useSession();
+  const { user, role, logout } = useSession();
   const { theme, setTheme } = useTheme();
 
   const isActive = (href: string) =>
@@ -145,19 +144,15 @@ export function Sidebar() {
                 System
               </MenuItem>
 
-              <MenuLabel>Preview as (demo)</MenuLabel>
-              {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                <MenuItem key={r} icon={<UserCog size={15} />} active={role === r} onClick={() => { setRole(r); close(); }}>
-                  {ROLE_LABELS[r]}
-                </MenuItem>
-              ))}
-
               <div className="my-1 h-px bg-border" />
               <Link href="/settings" onClick={close}>
                 <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
                   <Settings size={15} className="text-ink-3" /> Account &amp; settings
                 </span>
               </Link>
+              <MenuItem icon={<LogOut size={15} />} onClick={() => { close(); logout(); }}>
+                Log out
+              </MenuItem>
             </>
           )}
         </Menu>
