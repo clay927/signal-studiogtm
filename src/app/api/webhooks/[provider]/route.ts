@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { getConnectorSecret, insertWebhookEvent, touchConnector } from "@/lib/db";
 
 export const runtime = "nodejs";
 
 // Inbound webhook receiver: tools (Orum, Smartlead, HeyReach, …) POST here.
 // URL shape: /api/webhooks/{provider}?client={clientId}
-//
-// This endpoint is LIVE: it accepts events and verifies Orum's HMAC signature
-// when a secret is configured (env WEBHOOK_SECRET or WEBHOOK_SECRET_{PROVIDER}).
-// Persisting events onto the dashboards requires a database — until that is
-// connected, received events are acknowledged and logged (not yet stored).
+// Verifies the signature against the signing secret saved in the Connectors
+// panel (stored in the database), then persists the event.
 
 function timingSafeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
@@ -20,10 +18,11 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 // Orum: header "x-webhook-signature: t={timestamp},s={base64 HMAC-SHA256}"
 // signed value = "{timestamp}.{raw body}", HMAC-SHA256 with the signing key.
-function verifyOrumSignature(rawBody: string, header: string | null, secret: string): {
-  ok: boolean;
-  reason?: string;
-} {
+function verifyOrumSignature(
+  rawBody: string,
+  header: string | null,
+  secret: string
+): { ok: boolean; reason?: string } {
   if (!header) return { ok: false, reason: "missing signature header" };
   const parts = Object.fromEntries(
     header.split(",").map((kv) => {
@@ -38,20 +37,11 @@ function verifyOrumSignature(rawBody: string, header: string | null, secret: str
   const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
   if (!isFinite(ageSeconds) || ageSeconds > 300) return { ok: false, reason: "timestamp outside 5-minute window" };
 
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(`${timestamp}.${rawBody}`)
-    .digest("base64");
-
-  return timingSafeEqual(expected, signature)
-    ? { ok: true }
-    : { ok: false, reason: "signature mismatch" };
+  const expected = crypto.createHmac("sha256", secret).update(`${timestamp}.${rawBody}`).digest("base64");
+  return timingSafeEqual(expected, signature) ? { ok: true } : { ok: false, reason: "signature mismatch" };
 }
 
-export async function GET(
-  _req: NextRequest,
-  ctx: { params: Promise<{ provider: string }> }
-) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ provider: string }> }) {
   const { provider } = await ctx.params;
   return NextResponse.json({
     ok: true,
@@ -60,22 +50,31 @@ export async function GET(
   });
 }
 
-export async function POST(
-  req: NextRequest,
-  ctx: { params: Promise<{ provider: string }> }
-) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ provider: string }> }) {
   const { provider } = await ctx.params;
   const client = new URL(req.url).searchParams.get("client") ?? "unknown";
   const rawBody = await req.text();
 
-  const secret =
-    process.env[`WEBHOOK_SECRET_${provider.toUpperCase()}`] || process.env.WEBHOOK_SECRET || "";
+  // Signing secret: prefer the one saved in the Connectors panel (DB); fall
+  // back to an env var for local/manual setups.
+  let secret = "";
+  try {
+    secret = await getConnectorSecret(client, provider);
+  } catch {
+    // DB not reachable — fall through to env
+  }
+  if (!secret) {
+    secret = process.env[`WEBHOOK_SECRET_${provider.toUpperCase()}`] || process.env.WEBHOOK_SECRET || "";
+  }
 
-  let verification: { ok: boolean; reason?: string } = { ok: true, reason: "no secret configured (setup mode)" };
+  let verified = true;
+  let verifyReason = "no secret configured (setup mode)";
   if (secret && provider === "orum") {
-    verification = verifyOrumSignature(rawBody, req.headers.get("x-webhook-signature"), secret);
-    if (!verification.ok) {
-      return NextResponse.json({ ok: false, error: verification.reason }, { status: 401 });
+    const v = verifyOrumSignature(rawBody, req.headers.get("x-webhook-signature"), secret);
+    verified = v.ok;
+    verifyReason = v.ok ? "verified" : v.reason ?? "invalid";
+    if (!v.ok) {
+      return NextResponse.json({ ok: false, error: verifyReason }, { status: 401 });
     }
   }
 
@@ -86,18 +85,28 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "invalid JSON body" }, { status: 400 });
   }
 
-  // Received. Persistence is added when the database is connected.
-  console.log(
-    `[webhook] provider=${provider} client=${client} verified=${verification.ok} bytes=${rawBody.length}`
-  );
+  const eventType =
+    (event && typeof event === "object" && ("event" in event || "type" in event)
+      ? String((event as Record<string, unknown>).event ?? (event as Record<string, unknown>).type)
+      : null) ?? provider;
+
+  let stored = false;
+  let eventId: number | null = null;
+  try {
+    eventId = await insertWebhookEvent({ provider, clientId: client, eventType, verified, payload: event });
+    await touchConnector(client, provider);
+    stored = true;
+  } catch (err) {
+    console.error("[webhook] store failed", err);
+  }
 
   return NextResponse.json({
     ok: true,
     provider,
     client,
-    verified: verification.ok,
-    stored: false,
-    note: "Event received. Storage is connected in the next step to display it live.",
-    receivedKeys: event && typeof event === "object" ? Object.keys(event as object) : [],
+    verified,
+    stored,
+    eventId,
+    note: stored ? "Event stored." : "Event received but not stored (database unavailable).",
   });
 }

@@ -39,9 +39,6 @@ export default function SettingsPage() {
             <button className="flex items-center gap-1.5 rounded-[8px] border border-border px-3 py-1.5 text-[13px] text-ink-2 hover:border-border-strong">
               <KeyRound size={14} /> Reset password
             </button>
-            <span className="flex items-center gap-1.5 rounded-[8px] px-1 py-1.5 text-[12.5px] text-ink-3">
-              Light / dark mode lives in the menu, bottom-left.
-            </span>
           </div>
         </Card>
 

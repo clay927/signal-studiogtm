@@ -9,7 +9,9 @@
 
 export type Role = "owner" | "sdr" | "client" | "client_team";
 
-export type ClientStatus = "active" | "onboarding" | "at_risk" | "churned";
+export type ClientStatus = "onboarding" | "active" | "paused" | "inactive";
+
+export type ServiceType = "Diagnostic" | "MSP" | "Build" | "Complete";
 
 export interface DriveLinks {
   data: string;
@@ -25,7 +27,7 @@ export interface Client {
   slug: string;
   industry: string;
   ceo?: string;
-  contractType?: string;
+  serviceType?: ServiceType;
   accountOwner: string;
   sdrs: string[];
   status: ClientStatus;

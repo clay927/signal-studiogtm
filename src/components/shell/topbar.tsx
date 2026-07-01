@@ -8,10 +8,10 @@ import { HealthDot } from "@/components/ui";
 import type { ClientStatus } from "@/lib/types";
 
 const STATUS_DOT: Record<ClientStatus, "good" | "warn" | "bad" | "neutral"> = {
-  active: "good",
   onboarding: "neutral",
-  at_risk: "bad",
-  churned: "bad",
+  active: "good",
+  paused: "warn",
+  inactive: "neutral",
 };
 
 const RANGES: DateRange[] = ["today", "this_week", "last_week", "this_month", "custom"];

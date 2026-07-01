@@ -6,6 +6,7 @@ import { CLIENTS } from "@/lib/data";
 import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill, EmptyState } from "@/components/ui";
 import { num, ratePct, shortDate } from "@/lib/format";
 import { capacity as leadCapacity } from "@/lib/metrics";
+import { LiveFeed } from "@/components/live-feed";
 import { Phone, Mail, Contact, Users } from "lucide-react";
 import clsx from "clsx";
 
@@ -28,6 +29,10 @@ export default function ActivityPage() {
           </p>
         </div>
         <SampleBadge />
+      </div>
+
+      <div className="mb-5">
+        <LiveFeed clientId={clientId} />
       </div>
 
       {!hasActivity ? (
