@@ -113,16 +113,17 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {hiddenCount > 0 && (
-        <div className="mb-3 flex items-center justify-end">
-          <button
-            onClick={() => setShowInactive((s) => !s)}
-            className="rounded-full border border-border px-3 py-1 text-[12.5px] text-ink-2 hover:border-border-strong"
-          >
-            {showInactive ? "Hide" : "Show"} paused & inactive ({hiddenCount})
-          </button>
-        </div>
-      )}
+      <div className="mb-3 flex items-center justify-end gap-2 text-[12.5px]">
+        <span className="text-ink-3">
+          {showInactive ? "Showing all statuses" : `Showing active${hiddenCount ? ` · ${hiddenCount} hidden` : ""}`}
+        </span>
+        <button
+          onClick={() => setShowInactive((s) => !s)}
+          className="rounded-full border border-border px-3 py-1 text-ink-2 hover:border-border-strong"
+        >
+          {showInactive ? "Show active only" : "Show all statuses"}
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {visible.map((d) => {

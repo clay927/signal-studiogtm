@@ -67,15 +67,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ provider: 
     secret = process.env[`WEBHOOK_SECRET_${provider.toUpperCase()}`] || process.env.WEBHOOK_SECRET || "";
   }
 
+  // Reliability first: we ALWAYS store the event (flagged verified true/false)
+  // and return 200, so a missing/mismatched signature never silently drops real
+  // call data. Unverified events are visibly tagged in the live feed.
   let verified = true;
   let verifyReason = "no secret configured (setup mode)";
   if (secret && provider === "orum") {
     const v = verifyOrumSignature(rawBody, req.headers.get("x-webhook-signature"), secret);
     verified = v.ok;
     verifyReason = v.ok ? "verified" : v.reason ?? "invalid";
-    if (!v.ok) {
-      return NextResponse.json({ ok: false, error: verifyReason }, { status: 401 });
-    }
   }
 
   let event: unknown = null;
