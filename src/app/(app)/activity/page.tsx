@@ -1,23 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
 import { CLIENTS } from "@/lib/data";
-import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill, EmptyState } from "@/components/ui";
+import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill } from "@/components/ui";
 import { num, ratePct, shortDate } from "@/lib/format";
 import { capacity as leadCapacity } from "@/lib/metrics";
 import { LiveFeed } from "@/components/live-feed";
-import { Phone, Mail, Contact, Users } from "lucide-react";
+import type { Call, CallMetrics } from "@/lib/calls";
+import { Phone, Mail, Contact, Users, ExternalLink, PlayCircle } from "lucide-react";
 import clsx from "clsx";
 
 type Channel = "phone" | "email" | "linkedin";
 
 export default function ActivityPage() {
-  const { clientId } = useSession();
+  const { clientId, range } = useSession();
   const data = CLIENTS[clientId];
   const [channel, setChannel] = useState<Channel>("phone");
+  const [callData, setCallData] = useState<{ metrics: CallMetrics | null; calls: Call[] }>({ metrics: null, calls: [] });
 
-  const hasActivity = data.phone.dials + data.email.sent + data.linkedin.contacts > 0;
+  const loadCalls = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/calls?client=${clientId}&range=${range}`);
+      const d = await res.json();
+      setCallData({ metrics: d.metrics ?? null, calls: d.calls ?? [] });
+    } catch {
+      setCallData({ metrics: null, calls: [] });
+    }
+  }, [clientId, range]);
+
+  useEffect(() => {
+    loadCalls();
+    const t = setInterval(loadCalls, 15000);
+    return () => clearInterval(t);
+  }, [loadCalls]);
 
   return (
     <div>
@@ -35,42 +51,26 @@ export default function ActivityPage() {
         <LiveFeed clientId={clientId} />
       </div>
 
-      {!hasActivity ? (
-        <EmptyState title="No activity yet" body="Once campaigns go live, dials, emails, and LinkedIn touches will stream in here from the Calls, Emails, and LinkedIn workbooks." />
-      ) : (
-        <>
-          <div className="mb-4 inline-flex rounded-[10px] border border-border bg-surface p-1">
-            <Seg active={channel === "phone"} onClick={() => setChannel("phone")} icon={<Phone size={15} />}>Phone</Seg>
-            <Seg active={channel === "email"} onClick={() => setChannel("email")} icon={<Mail size={15} />}>Email</Seg>
-            <Seg active={channel === "linkedin"} onClick={() => setChannel("linkedin")} icon={<Contact size={15} />}>LinkedIn</Seg>
-          </div>
+      <div className="mb-4 inline-flex rounded-[10px] border border-border bg-surface p-1">
+        <Seg active={channel === "phone"} onClick={() => setChannel("phone")} icon={<Phone size={15} />}>Phone</Seg>
+        <Seg active={channel === "email"} onClick={() => setChannel("email")} icon={<Mail size={15} />}>Email</Seg>
+        <Seg active={channel === "linkedin"} onClick={() => setChannel("linkedin")} icon={<Contact size={15} />}>LinkedIn</Seg>
+      </div>
 
-          {channel === "phone" && <PhonePanel data={data} />}
-          {channel === "email" && <EmailPanel data={data} />}
-          {channel === "linkedin" && <LinkedInPanel data={data} />}
+      {channel === "phone" && <PhonePanel metrics={callData.metrics} calls={callData.calls} />}
+      {channel === "email" && <EmailPanel data={data} />}
+      {channel === "linkedin" && <LinkedInPanel data={data} />}
 
-          <div className="mt-6">
-            <ActiveLeads data={data} />
-          </div>
-        </>
-      )}
+      <div className="mt-6">
+        <ActiveLeads data={data} />
+      </div>
 
       <UpdatedStamp when={data.lastUpdated} />
     </div>
   );
 }
 
-function Seg({
-  children,
-  active,
-  onClick,
-  icon,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-}) {
+function Seg({ children, active, onClick, icon }: { children: React.ReactNode; active: boolean; onClick: () => void; icon: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
@@ -85,20 +85,71 @@ function Seg({
   );
 }
 
-function PhonePanel({ data }: { data: (typeof CLIENTS)[string] }) {
-  const p = data.phone;
+function ChannelEmpty({ tool, channel }: { tool: string; channel: string }) {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      <StatTile label="Dials" value={num(p.dials)} status="neutral" />
-      <StatTile label="Connects" value={num(p.connects)} sub={`${ratePct(p.connects, p.dials)} dial-to-connect`} status="good" />
-      <StatTile label="Conversations" value={num(p.conversations)} sub={`${ratePct(p.conversations, p.dials)} dial-to-convo`} status="good" />
-      <StatTile label="Meetings booked" value={num(p.meetings)} sub={`${ratePct(p.meetings, p.connects)} connect-to-meeting`} status="good" accent />
-    </div>
+    <Card className="p-6 text-center">
+      <p className="text-[15px] font-medium text-ink">No {channel} data yet</p>
+      <p className="mx-auto mt-1 max-w-md text-[13.5px] text-ink-2">
+        Connect {tool} in Settings → Connectors (paste Signal&apos;s webhook URL into {tool}) and {channel} activity streams in here.
+      </p>
+    </Card>
   );
+}
+
+function PhonePanel({ metrics, calls }: { metrics: CallMetrics | null; calls: Call[] }) {
+  if (!metrics || metrics.dials === 0) {
+    return <ChannelEmpty tool="Orum or Nooks" channel="phone" />;
+  }
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatTile label="Dials" value={num(metrics.dials)} status="neutral" />
+        <StatTile label="Connects" value={num(metrics.connects)} sub={`${metrics.dialToConnect}% dial-to-connect`} status="good" />
+        <StatTile label="Conversations" value={num(metrics.conversations)} status="good" />
+        <StatTile label="Meetings booked" value={num(metrics.meetings)} sub={`${metrics.connectToMeeting}% connect-to-meeting`} status="good" accent />
+      </div>
+      <Card className="mt-4 p-5">
+        <SectionTitle icon={<Phone size={16} />} title="Recent calls" right={<span className="text-[12px] text-ink-3">{calls.length} shown</span>} />
+        <div className="flex flex-col gap-2">
+          {calls.slice(0, 15).map((c) => (
+            <div key={c.id} className="flex items-center gap-3 rounded-[10px] border border-border bg-surface-2 p-2.5">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[13.5px] font-medium text-ink">{c.prospect}</span>
+                  {c.company && <span className="truncate text-[12px] text-ink-3">· {c.company}</span>}
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-ink-3">
+                  <Pill tone={c.tone}>{c.disposition}</Pill>
+                  <span>{c.rep}</span>
+                  {c.objection && <span className="text-warn-ink">objection: {c.objection}</span>}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {c.recording && (
+                  <a href={c.recording} target="_blank" rel="noreferrer" className="text-gold hover:opacity-80" title="Recording"><PlayCircle size={16} /></a>
+                )}
+                {c.transcript && (
+                  <a href={c.transcript} target="_blank" rel="noreferrer" className="text-gold hover:opacity-80" title="Transcript"><ExternalLink size={15} /></a>
+                )}
+                <span className="text-[11px] text-ink-3">{formatTime(c.at)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function EmailPanel({ data }: { data: (typeof CLIENTS)[string] }) {
   const e = data.email;
+  if (e.sent === 0) return <ChannelEmpty tool="Smartlead or Instantly" channel="email" />;
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -114,6 +165,7 @@ function EmailPanel({ data }: { data: (typeof CLIENTS)[string] }) {
 
 function LinkedInPanel({ data }: { data: (typeof CLIENTS)[string] }) {
   const l = data.linkedin;
+  if (l.contacts === 0) return <ChannelEmpty tool="HeyReach or La Growth Machine" channel="LinkedIn" />;
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -139,9 +191,7 @@ function RepliesList({ data, channel }: { data: (typeof CLIENTS)[string]; channe
             <div className="flex items-center gap-2 text-[13px]">
               <span className="font-medium text-ink">{r.name}</span>
               <span className="text-ink-3">· {r.company}</span>
-              <Pill tone={r.sentiment === "positive" ? "good" : r.sentiment === "negative" ? "bad" : "neutral"}>
-                {r.sentiment}
-              </Pill>
+              <Pill tone={r.sentiment === "positive" ? "good" : r.sentiment === "negative" ? "bad" : "neutral"}>{r.sentiment}</Pill>
               <span className="ml-auto text-[12px] text-ink-3">{shortDate(r.date)}</span>
             </div>
             <p className="mt-1 text-[13.5px] leading-relaxed text-ink-2">&ldquo;{r.message}&rdquo;</p>
@@ -154,23 +204,28 @@ function RepliesList({ data, channel }: { data: (typeof CLIENTS)[string]; channe
 
 function ActiveLeads({ data }: { data: (typeof CLIENTS)[string] }) {
   const a = data.activeLeads;
-  const { pct: capacity, status: capStatus } = leadCapacity(a.attempting, a.target);
+  const { pct: cap, status: capStatus } = leadCapacity(a.attempting, a.target);
   const total = a.statuses.reduce((s, x) => s + x.count, 0) || 1;
+
+  if (a.attempting === 0 && a.unworked === 0) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-[15px] font-medium text-ink">No active leads loaded</p>
+        <p className="mx-auto mt-1 max-w-md text-[13.5px] text-ink-2">
+          Once the lead list is loaded (Apollo → Active Contacts), the daily capacity view appears here.
+        </p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-5">
       <SectionTitle icon={<Users size={16} />} title="Active leads & capacity" />
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatTile label="Attempting to contact" value={num(a.attempting)} sub="worked every day" status="good" accent />
-        <StatTile
-          label="Capacity vs target"
-          value={`${capacity}%`}
-          sub={`target ${num(a.target)} active`}
-          status={capStatus}
-        />
+        <StatTile label="Capacity vs target" value={`${cap}%`} sub={`target ${num(a.target)} active`} status={capStatus} />
         <StatTile label="Yet to be worked" value={num(a.unworked)} sub="in the tank" status="neutral" />
       </div>
-
       <p className="mb-2 text-[12px] text-ink-3">Lead status breakdown</p>
       <div className="space-y-2">
         {a.statuses.map((s) => (
@@ -183,11 +238,6 @@ function ActiveLeads({ data }: { data: (typeof CLIENTS)[string] }) {
           </div>
         ))}
       </div>
-      {capStatus !== "good" && (
-        <p className="mt-3 rounded-[10px] bg-warn-soft px-3 py-2 text-[12.5px] text-warn-ink">
-          Below capacity target — the team needs more active leads to hit dial and email volume.
-        </p>
-      )}
     </Card>
   );
 }

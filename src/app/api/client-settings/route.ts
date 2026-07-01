@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllClientSettings, upsertClientSettings, disableClientConnectors, deactivateClientUsers } from "@/lib/db";
+import { getAllClientSettings, upsertClientSettings, disableClientConnectors, enableClientConnectors, deactivateClientUsers } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -27,6 +27,9 @@ export async function POST(req: NextRequest) {
       await disableClientConnectors(body.client);
       await deactivateClientUsers(body.client);
       applied = ["connectors disabled", "client users deactivated"];
+    } else if (body.status === "active" || body.status === "onboarding") {
+      await enableClientConnectors(body.client);
+      applied = ["connectors re-enabled"];
     }
     return NextResponse.json({ ok: true, applied });
   } catch {

@@ -170,6 +170,25 @@ export async function listEvents(
   return rows as EventRow[];
 }
 
+export async function listEventsByProvider(
+  clientId: string,
+  provider: string,
+  sinceIso: string | null = null,
+  untilIso: string | null = null,
+  limit = 5000
+): Promise<EventRow[]> {
+  const sql = await db();
+  const rows = await sql`
+    SELECT id, provider, event_type, verified, payload, received_at
+    FROM webhook_events
+    WHERE client_id = ${clientId} AND provider = ${provider}
+      AND (${sinceIso}::timestamptz IS NULL OR received_at >= ${sinceIso}::timestamptz)
+      AND (${untilIso}::timestamptz IS NULL OR received_at < ${untilIso}::timestamptz)
+    ORDER BY received_at DESC LIMIT ${limit}
+  `;
+  return rows as EventRow[];
+}
+
 export async function eventCounts(clientId: string): Promise<{ total: number; today: number }> {
   const sql = await db();
   const rows = await sql`
@@ -248,6 +267,11 @@ export async function deactivateClientUsers(clientId: string): Promise<void> {
 export async function disableClientConnectors(clientId: string): Promise<void> {
   const sql = await db();
   await sql`UPDATE connectors SET enabled = false WHERE client_id = ${clientId}`;
+}
+
+export async function enableClientConnectors(clientId: string): Promise<void> {
+  const sql = await db();
+  await sql`UPDATE connectors SET enabled = true WHERE client_id = ${clientId}`;
 }
 
 export async function resetClient(clientId: string): Promise<void> {
