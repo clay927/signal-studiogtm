@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ChevronDown, Calendar } from "lucide-react";
 import { useSession, RANGE_LABELS, type DateRange } from "@/lib/session";
 import { CLIENTS } from "@/lib/data";
@@ -18,6 +19,7 @@ const RANGES: DateRange[] = ["today", "this_week", "last_week", "this_month", "c
 
 export function Topbar() {
   const { clientId, setClientId, clients, range, setRange } = useSession();
+  const router = useRouter();
   const current = CLIENTS[clientId]?.client;
 
   return (
@@ -44,6 +46,7 @@ export function Topbar() {
                   onClick={() => {
                     setClientId(id);
                     close();
+                    router.push("/");
                   }}
                   icon={<HealthDot status={STATUS_DOT[c.status]} />}
                 >

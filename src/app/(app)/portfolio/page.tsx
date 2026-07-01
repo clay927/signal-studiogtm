@@ -28,6 +28,7 @@ export default function PortfolioPage() {
   const { user, setClientId } = useSession();
   const router = useRouter();
   const [overrides, setOverrides] = useState<Overrides>({});
+  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     fetch("/api/client-settings")
@@ -75,6 +76,8 @@ export default function PortfolioPage() {
   const held = activeSet.filter((d) => d.results.holdRate > 0);
   const avgHold = held.length ? Math.round(held.reduce((s, d) => s + d.results.holdRate, 0) / held.length) : 0;
   const paused = all.filter((d) => statusOf(d.client.id) === "paused");
+  const hiddenCount = all.filter((d) => ["paused", "inactive"].includes(statusOf(d.client.id))).length;
+  const visible = showInactive ? all : all.filter((d) => !["paused", "inactive"].includes(statusOf(d.client.id)));
 
   const open = (id: string) => {
     setClientId(id);
@@ -110,8 +113,19 @@ export default function PortfolioPage() {
         </div>
       )}
 
+      {hiddenCount > 0 && (
+        <div className="mb-3 flex items-center justify-end">
+          <button
+            onClick={() => setShowInactive((s) => !s)}
+            className="rounded-full border border-border px-3 py-1 text-[12.5px] text-ink-2 hover:border-border-strong"
+          >
+            {showInactive ? "Hide" : "Show"} paused & inactive ({hiddenCount})
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {all.map((d) => {
+        {visible.map((d) => {
           const c = d.client;
           const status = statusOf(c.id);
           const service = serviceOf(c.id);

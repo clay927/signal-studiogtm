@@ -1,17 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, ROLE_LABELS } from "@/lib/session";
-import { CLIENTS, CLIENT_ORDER, USERS } from "@/lib/data";
+import { CLIENTS, CLIENT_ORDER } from "@/lib/data";
 import { Card, SectionTitle, Pill, HealthDot } from "@/components/ui";
 import { STATUS_DOT } from "@/components/shell/topbar";
 import { ConnectorsPanel } from "@/components/connectors-panel";
-import { User, Users, Building2, KeyRound, ShieldCheck, Plus, Lock } from "lucide-react";
+import { UserManager } from "@/components/user-manager";
+import { User, Users, Building2, KeyRound, Plus, Lock } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, role } = useSession();
   const isOwner = user.clientAccess === "all";
   const isClient = role === "client";
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const avatarKey = `signal.avatar.${user.id}`;
+  useEffect(() => {
+    try {
+      setAvatar(localStorage.getItem(avatarKey));
+    } catch {
+      setAvatar(null);
+    }
+  }, [avatarKey]);
+
+  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result);
+      setAvatar(url);
+      try {
+        localStorage.setItem(avatarKey, url);
+      } catch {
+        // image too large for storage — keep in memory
+      }
+    };
+    reader.readAsDataURL(file);
+  }
 
   return (
     <div>
@@ -24,15 +52,24 @@ export default function SettingsPage() {
         <Card className="p-5">
           <SectionTitle icon={<User size={16} />} title="Your profile" />
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft text-[18px] font-medium text-gold">
-              {user.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-            </div>
+            {avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatar} alt="" className="h-14 w-14 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft text-[18px] font-medium text-gold">
+                {user.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+              </div>
+            )}
             <div className="flex-1">
               <p className="text-[15px] font-medium text-ink">{user.name}</p>
               <p className="text-[13px] text-ink-2">{user.email}</p>
             </div>
-            <button className="rounded-[8px] border border-border px-3 py-1.5 text-[13px] text-ink-2 hover:border-border-strong">
-              Change photo
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} />
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="rounded-[8px] border border-border px-3 py-1.5 text-[13px] text-ink-2 hover:border-border-strong"
+            >
+              {avatar ? "Change photo" : "Upload photo"}
             </button>
           </div>
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
@@ -100,45 +137,7 @@ function AdminPanel() {
     <>
       <ConnectorsPanel />
 
-      <Card className="p-5">
-        <SectionTitle
-          icon={<ShieldCheck size={16} />}
-          title="Users"
-          right={
-            <button className="flex items-center gap-1.5 rounded-[8px] border border-border px-2.5 py-1.5 text-[12.5px] text-ink-2 hover:border-border-strong">
-              <Plus size={14} /> Add user
-            </button>
-          }
-        />
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13.5px]">
-            <thead>
-              <tr className="border-b border-border text-left text-[12px] text-ink-3">
-                <th className="py-2 pr-3 font-normal">Name</th>
-                <th className="py-2 pr-3 font-normal">Role</th>
-                <th className="py-2 pr-3 font-normal">Access</th>
-                <th className="py-2 pr-3 font-normal">Billing</th>
-                <th className="py-2 pl-3 text-right font-normal">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.values(USERS).map((u) => (
-                <tr key={u.id} className="border-b border-border last:border-0">
-                  <td className="py-2.5 pr-3 text-ink">{u.name}</td>
-                  <td className="py-2.5 pr-3 text-ink-2">{ROLE_LABELS[u.role]}</td>
-                  <td className="py-2.5 pr-3 text-ink-2">
-                    {u.clientAccess === "all" ? "All clients" : `${(u.clientAccess as string[]).length} client(s)`}
-                  </td>
-                  <td className="py-2.5 pr-3">{u.seesBilling ? <Pill tone="gold">Yes</Pill> : <span className="text-ink-3">—</span>}</td>
-                  <td className="py-2.5 pl-3 text-right">
-                    <button className="text-[12.5px] text-gold hover:underline">Reset password</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <UserManager />
 
       <Card className="p-5">
         <SectionTitle

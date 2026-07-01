@@ -46,6 +46,15 @@ const SCHEMA_STATEMENTS = [
      service_type text,
      updated_at timestamptz NOT NULL DEFAULT now()
    )`,
+  `CREATE TABLE IF NOT EXISTS users (
+     id text PRIMARY KEY,
+     name text NOT NULL DEFAULT '',
+     email text NOT NULL DEFAULT '',
+     role text NOT NULL DEFAULT 'client_team',
+     client_access text[] NOT NULL DEFAULT '{}',
+     status text NOT NULL DEFAULT 'active',
+     created_at timestamptz NOT NULL DEFAULT now()
+   )`,
 ];
 
 let schemaPromise: Promise<void> | null = null;
@@ -143,11 +152,19 @@ export async function insertWebhookEvent(e: {
   return rows[0]?.id as number;
 }
 
-export async function listEvents(clientId: string, limit = 25): Promise<EventRow[]> {
+export async function listEvents(
+  clientId: string,
+  limit = 25,
+  sinceIso: string | null = null,
+  untilIso: string | null = null
+): Promise<EventRow[]> {
   const sql = await db();
   const rows = await sql`
     SELECT id, provider, event_type, verified, payload, received_at
-    FROM webhook_events WHERE client_id = ${clientId}
+    FROM webhook_events
+    WHERE client_id = ${clientId}
+      AND (${sinceIso}::timestamptz IS NULL OR received_at >= ${sinceIso}::timestamptz)
+      AND (${untilIso}::timestamptz IS NULL OR received_at < ${untilIso}::timestamptz)
     ORDER BY received_at DESC LIMIT ${limit}
   `;
   return rows as EventRow[];
@@ -176,6 +193,61 @@ export async function getAllClientSettings(): Promise<ClientSettingsRow[]> {
   const sql = await db();
   const rows = await sql`SELECT client_id, status, service_type FROM client_settings`;
   return rows as ClientSettingsRow[];
+}
+
+// ---- Users ----
+
+export interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  client_access: string[];
+  status: string;
+}
+
+export async function listUsers(): Promise<UserRow[]> {
+  const sql = await db();
+  const rows = await sql`SELECT id, name, email, role, client_access, status FROM users ORDER BY created_at`;
+  return rows as UserRow[];
+}
+
+export async function upsertUser(u: {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  clientAccess: string[];
+  status?: string;
+}): Promise<void> {
+  const sql = await db();
+  await sql`
+    INSERT INTO users (id, name, email, role, client_access, status)
+    VALUES (${u.id}, ${u.name}, ${u.email}, ${u.role}, ${u.clientAccess}, ${u.status ?? "active"})
+    ON CONFLICT (id) DO UPDATE SET
+      name = ${u.name}, email = ${u.email}, role = ${u.role},
+      client_access = ${u.clientAccess}, status = ${u.status ?? "active"}
+  `;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const sql = await db();
+  await sql`DELETE FROM users WHERE id = ${id}`;
+}
+
+// Rule: when a client is paused/inactive, deactivate its client-side users and
+// turn off its connectors. StudioGTM staff (owner/sdr) are left untouched.
+export async function deactivateClientUsers(clientId: string): Promise<void> {
+  const sql = await db();
+  await sql`
+    UPDATE users SET status = 'deactivated'
+    WHERE role IN ('client', 'client_team') AND ${clientId} = ANY(client_access)
+  `;
+}
+
+export async function disableClientConnectors(clientId: string): Promise<void> {
+  const sql = await db();
+  await sql`UPDATE connectors SET enabled = false WHERE client_id = ${clientId}`;
 }
 
 export async function resetClient(clientId: string): Promise<void> {

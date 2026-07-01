@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllClientSettings, upsertClientSettings } from "@/lib/db";
+import { getAllClientSettings, upsertClientSettings, disableClientConnectors, deactivateClientUsers } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,13 @@ export async function POST(req: NextRequest) {
   if (!body.client) return NextResponse.json({ ok: false, error: "missing client" }, { status: 400 });
   try {
     await upsertClientSettings(body.client, { status: body.status, serviceType: body.serviceType });
-    return NextResponse.json({ ok: true });
+    let applied: string[] = [];
+    if (body.status === "paused" || body.status === "inactive") {
+      await disableClientConnectors(body.client);
+      await deactivateClientUsers(body.client);
+      applied = ["connectors disabled", "client users deactivated"];
+    }
+    return NextResponse.json({ ok: true, applied });
   } catch {
     return NextResponse.json({ ok: false, dbUnavailable: true }, { status: 503 });
   }

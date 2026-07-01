@@ -197,7 +197,7 @@ function Logo({ def }: { def: ConnectorDef }) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={`https://logo.clearbit.com/${def.logoDomain}`}
+        src={`https://unavatar.io/${def.logoDomain}?fallback=false`}
         alt=""
         onError={() => setErr(true)}
         className="h-7 w-7 shrink-0 rounded-[7px] bg-white object-contain"

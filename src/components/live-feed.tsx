@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, SectionTitle, Pill } from "@/components/ui";
+import { useSession, RANGE_LABELS } from "@/lib/session";
 import { Radio, RefreshCw } from "lucide-react";
 
 interface EventRow {
@@ -26,6 +27,7 @@ function summarize(payload: Record<string, unknown> | null): string {
 }
 
 export function LiveFeed({ clientId }: { clientId: string }) {
+  const { range } = useSession();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [counts, setCounts] = useState({ total: 0, today: 0 });
   const [dbDown, setDbDown] = useState(false);
@@ -33,7 +35,7 @@ export function LiveFeed({ clientId }: { clientId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/events?client=${clientId}`);
+      const res = await fetch(`/api/events?client=${clientId}&range=${range}`);
       const data = await res.json();
       setDbDown(!!data.dbUnavailable);
       setEvents(data.events ?? []);
@@ -49,7 +51,7 @@ export function LiveFeed({ clientId }: { clientId: string }) {
     load();
     const t = setInterval(load, 15000); // poll for a live feel
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, range]);
 
   return (
     <Card className="p-5">
@@ -70,7 +72,8 @@ export function LiveFeed({ clientId }: { clientId: string }) {
         </p>
       ) : events.length === 0 ? (
         <p className="text-[13px] text-ink-2">
-          No live events yet. Connect a tool in Settings → Connectors and events will stream in here in real time.
+          No events in {RANGE_LABELS[range].toLowerCase()}. Connect a tool in Settings → Connectors and
+          events stream in here in real time. (The date filter above changes this window.)
         </p>
       ) : (
         <div className="flex flex-col gap-2">
