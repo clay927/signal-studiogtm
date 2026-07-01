@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/session";
-import { CLIENTS } from "@/lib/data";
+import { useData } from "@/lib/store";
 import { StatTile, SampleBadge, SectionTitle, UpdatedStamp, Card } from "@/components/ui";
 import { WinsFeed } from "@/components/wins-feed";
 import { BenchmarkBars } from "@/components/benchmark-bars";
@@ -12,7 +12,8 @@ import { ListChecks, Rocket } from "lucide-react";
 
 export default function HomePage() {
   const { clientId } = useSession();
-  const data = CLIENTS[clientId];
+  const { getClientData } = useData();
+  const data = getClientData(clientId);
   const c = data.client;
   const r = data.results;
   const isLaunching = c.status === "onboarding" && r.meetingsHeld === 0;

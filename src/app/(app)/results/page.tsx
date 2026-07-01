@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "@/lib/session";
-import { CLIENTS } from "@/lib/data";
+import { useData } from "@/lib/store";
 import { StatTile, SampleBadge, Card, SectionTitle, UpdatedStamp, Pill, EmptyState } from "@/components/ui";
 import { MeetingDetail, STAGE_LABEL } from "@/components/meeting-detail";
 import { money, num, pct, shortDate } from "@/lib/format";
@@ -13,7 +13,8 @@ import clsx from "clsx";
 
 export default function ResultsPage() {
   const { clientId } = useSession();
-  const data = CLIENTS[clientId];
+  const { getClientData } = useData();
+  const data = getClientData(clientId);
   const r = data.results;
   const [campaign, setCampaign] = useState<string>("all");
   const [selected, setSelected] = useState<Meeting | null>(null);

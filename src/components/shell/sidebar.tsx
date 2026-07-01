@@ -16,6 +16,7 @@ import {
   Moon,
   Monitor,
   UserCog,
+  Upload,
 } from "lucide-react";
 import { useSession, ROLE_LABELS } from "@/lib/session";
 import { Menu, MenuItem, MenuLabel } from "@/components/menu";
@@ -82,6 +83,18 @@ export function Sidebar() {
           >
             <Building2 size={18} strokeWidth={1.75} />
             All clients
+          </Link>
+          <Link
+            href="/import"
+            className={clsx(
+              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
+              isActive("/import")
+                ? "bg-navy-deep text-sidebar-ink-active"
+                : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
+            )}
+          >
+            <Upload size={18} strokeWidth={1.75} />
+            Import data
           </Link>
           <Link
             href="/settings"
