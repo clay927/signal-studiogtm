@@ -24,6 +24,8 @@ export interface Client {
   name: string;
   slug: string;
   industry: string;
+  ceo?: string;
+  contractType?: string;
   accountOwner: string;
   sdrs: string[];
   status: ClientStatus;

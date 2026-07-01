@@ -5,6 +5,7 @@ import { useSession, ROLE_LABELS } from "@/lib/session";
 import { CLIENTS, CLIENT_ORDER, USERS } from "@/lib/data";
 import { Card, SectionTitle, Pill, HealthDot } from "@/components/ui";
 import { STATUS_DOT } from "@/components/shell/topbar";
+import { ConnectorsPanel } from "@/components/connectors-panel";
 import { User, Users, Building2, KeyRound, ShieldCheck, Plus, Lock } from "lucide-react";
 
 export default function SettingsPage() {
@@ -100,6 +101,8 @@ function AdminPanel() {
 
   return (
     <>
+      <ConnectorsPanel />
+
       <Card className="p-5">
         <SectionTitle
           icon={<ShieldCheck size={16} />}

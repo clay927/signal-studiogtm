@@ -507,9 +507,79 @@ export const CLIENTS: Record<string, ClientData> = {
       "Cedar & Vine needs attention. Deliverability (81%) and bad data (16% of numbers) are throttling output, and a 44% hold rate is dragging results. Recovery plan: list rebuild + domain warmup, in progress.",
     lastUpdated: LAST_UPDATED,
   },
+
+  snoball: {
+    client: {
+      id: "snoball",
+      name: "Snoball",
+      slug: "snoball",
+      industry: "Referral & advocacy marketing",
+      ceo: "Landon Taylor",
+      contractType: "Managed Service (MSP)",
+      accountOwner: "Clay Tirrell",
+      sdrs: [],
+      status: "onboarding",
+      startDate: "2026-07-01",
+      drive: {
+        data: "https://drive.google.com/drive/folders/1-zIrpYtBT5LuZQrUOHy9weCnuGpaH3S-",
+        channel: "https://drive.google.com/drive/folders/1fBz9DT_uKIOnZ799dHBWmau7_XsE8yjn",
+        messaging: "https://drive.google.com/drive/folders/1KZJQSZmIfSHy_ba2RKOvHJd1UluZ998T",
+        agreements: "https://drive.google.com/drive/folders/13VabsDMNzMjaw1oiULvyjdxiDdfE15_q",
+        working: "https://drive.google.com/drive/folders/1P-1FJ5AfzGrJj9643M8ZVkOUJiMi1i8A",
+      },
+    },
+    results: {
+      closedWon: 0,
+      newPipeline: 0,
+      meetingsHeld: 0,
+      meetingsScheduled: 0,
+      holdRate: 0,
+      closedWonDelta: 0,
+      meetingsHeldDelta: 0,
+      pipelineOpps: 0,
+    },
+    meetings: [],
+    phone: { dials: 0, connects: 0, conversations: 0, meetings: 0 },
+    email: { sent: 0, opens: 0, replies: 0, positiveReplies: 0 },
+    linkedin: { contacts: 0, connects: 0, replies: 0, positiveReplies: 0 },
+    replies: [],
+    activeLeads: {
+      attempting: 0,
+      unworked: 0,
+      target: 800,
+      statuses: [{ label: "Yet to be worked", count: 0 }],
+    },
+    benchmarks: [],
+    campaigns: [],
+    projects: [
+      {
+        id: "sb1",
+        name: "Onboarding & connector setup",
+        owner: "Clay Tirrell",
+        due: "2026-07-08",
+        stages: [
+          { label: "Intake", state: "done" },
+          { label: "Drive setup", state: "done" },
+          { label: "Connectors", state: "active" },
+          { label: "Live data", state: "todo" },
+          { label: "Launch", state: "todo" },
+        ],
+      },
+    ],
+    unitEconomics: {
+      meetingsPerMonth: 20,
+      showRate: 78,
+      oppToWin: 22,
+      avgDealValue: 20000,
+      programCost: 7000,
+    },
+    insight:
+      "Snoball is our flagship MSP build — the most repeatable system to replicate. Onboarding is underway; next step is wiring live connectors (Orum, email, LinkedIn) so real activity streams in.",
+    lastUpdated: LAST_UPDATED,
+  },
 };
 
-export const CLIENT_ORDER = ["yeticonnect", "northwind", "pontelabor", "cedarvine"];
+export const CLIENT_ORDER = ["yeticonnect", "northwind", "snoball", "pontelabor", "cedarvine"];
 
 // Demo users — one per role, to show how access scope changes the same view.
 export const USERS: Record<string, User> = {
