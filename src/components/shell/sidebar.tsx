@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -23,6 +24,26 @@ export function Sidebar() {
   const { user, role, logout } = useSession();
   const { theme, setTheme } = useTheme();
   const isOwner = user.clientAccess === "all";
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  // Profile photo (stored per user on this device); refreshes when the
+  // Profile page saves a new one.
+  useEffect(() => {
+    const read = () => {
+      try {
+        setAvatar(localStorage.getItem(`signal.avatar.${user.id}`));
+      } catch {
+        setAvatar(null);
+      }
+    };
+    read();
+    window.addEventListener("pando-avatar-updated", read);
+    window.addEventListener("storage", read);
+    return () => {
+      window.removeEventListener("pando-avatar-updated", read);
+      window.removeEventListener("storage", read);
+    };
+  }, [user.id]);
 
   return (
     <aside className="flex h-dvh w-[232px] shrink-0 flex-col bg-sidebar px-3 py-4 text-sidebar-ink">
@@ -54,9 +75,14 @@ export function Sidebar() {
           width={212}
           trigger={() => (
             <div className="flex items-center gap-2.5 rounded-[10px] px-2 py-2 hover:bg-navy-deep/60">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-deep text-[12px] font-medium text-sidebar-ink-active">
-                {initials(user.name)}
-              </span>
+              {avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-deep text-[12px] font-medium text-sidebar-ink-active">
+                  {initials(user.name)}
+                </span>
+              )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] text-sidebar-ink-active">
                   {user.name}

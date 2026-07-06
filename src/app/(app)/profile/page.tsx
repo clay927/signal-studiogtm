@@ -44,6 +44,7 @@ export default function ProfilePage() {
       setAvatar(url);
       try {
         localStorage.setItem(avatarKey, url);
+        window.dispatchEvent(new Event("pando-avatar-updated")); // sidebar picks it up
       } catch {
         // image too large for storage — keep in memory
       }
