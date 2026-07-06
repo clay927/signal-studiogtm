@@ -12,6 +12,7 @@ import {
   Monitor,
   LogOut,
   Upload,
+  UserRound,
 } from "lucide-react";
 import { useSession, ROLE_LABELS } from "@/lib/session";
 import { Menu, MenuItem, MenuLabel } from "@/components/menu";
@@ -70,6 +71,11 @@ export function Sidebar() {
         >
           {(close) => (
             <>
+              <Link href="/profile" onClick={close}>
+                <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
+                  <UserRound size={15} className="text-ink-3" /> Profile
+                </span>
+              </Link>
               <Link href="/settings" onClick={close}>
                 <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
                   <Settings size={15} className="text-ink-3" /> Settings

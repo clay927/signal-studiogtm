@@ -30,8 +30,9 @@ const CATEGORY_ICON: Record<ConnectorCategory, React.ReactNode> = {
   enablement: <Sparkles size={15} />,
 };
 
-export function ConnectorsPanel() {
-  const { clientId } = useSession();
+export function ConnectorsPanel({ clientId: fixedClientId }: { clientId?: string }) {
+  const { clientId: sessionClientId } = useSession();
+  const clientId = fixedClientId ?? sessionClientId;
   const client = { name: clientName(clientId) };
   const [rows, setRows] = useState<Record<string, Row>>({});
   const [inputs, setInputs] = useState<Record<string, { secret: string; apiKey: string }>>({});
@@ -86,7 +87,7 @@ export function ConnectorsPanel() {
         title="Connectors"
         right={
           <span className="flex items-center gap-2 text-[12px] text-ink-3">
-            {connectedCount} connected · <ClientSelect />
+            {connectedCount} connected{fixedClientId ? ` · ${client.name}` : <> · <ClientSelect /></>}
           </span>
         }
       />

@@ -57,6 +57,7 @@ const SCHEMA_STATEMENTS = [
    )`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token text NOT NULL DEFAULT ''`,
+  `ALTER TABLE client_settings ADD COLUMN IF NOT EXISTS terms text NOT NULL DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS results_monthly (
      client_id text NOT NULL,
      month text NOT NULL,
@@ -264,11 +265,12 @@ export interface ClientSettingsRow {
   client_id: string;
   status: string | null;
   service_type: string | null;
+  terms: string;
 }
 
 export async function getAllClientSettings(): Promise<ClientSettingsRow[]> {
   const sql = await db();
-  const rows = await sql`SELECT client_id, status, service_type FROM client_settings`;
+  const rows = await sql`SELECT client_id, status, service_type, terms FROM client_settings`;
   return rows as ClientSettingsRow[];
 }
 
@@ -390,15 +392,16 @@ export async function resetClient(clientId: string): Promise<void> {
 
 export async function upsertClientSettings(
   clientId: string,
-  data: { status?: string; serviceType?: string }
+  data: { status?: string; serviceType?: string; terms?: string }
 ): Promise<void> {
   const sql = await db();
   await sql`
-    INSERT INTO client_settings (client_id, status, service_type, updated_at)
-    VALUES (${clientId}, ${data.status ?? null}, ${data.serviceType ?? null}, now())
+    INSERT INTO client_settings (client_id, status, service_type, terms, updated_at)
+    VALUES (${clientId}, ${data.status ?? null}, ${data.serviceType ?? null}, ${data.terms ?? ""}, now())
     ON CONFLICT (client_id) DO UPDATE SET
       status = COALESCE(${data.status ?? null}, client_settings.status),
       service_type = COALESCE(${data.serviceType ?? null}, client_settings.service_type),
+      terms = CASE WHEN ${data.terms != null} THEN ${data.terms ?? ""} ELSE client_settings.terms END,
       updated_at = now()
   `;
 }

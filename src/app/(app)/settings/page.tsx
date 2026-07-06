@@ -1,83 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useSession, ROLE_LABELS } from "@/lib/session";
 import { CLIENT_ORDER, clientMeta, formatEngagement } from "@/lib/clients";
 import { Card, SectionTitle, Pill, HealthDot } from "@/components/ui";
-import { ConnectorsPanel } from "@/components/connectors-panel";
 import { UserManager } from "@/components/user-manager";
-import { User, Users, Building2, KeyRound, Plus, Lock } from "lucide-react";
+import { Users, Building2, Plus, Lock } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, role } = useSession();
   const isOwner = user.clientAccess === "all";
   const isClient = role === "client";
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const avatarKey = `signal.avatar.${user.id}`;
-  useEffect(() => {
-    try {
-      setAvatar(localStorage.getItem(avatarKey));
-    } catch {
-      setAvatar(null);
-    }
-  }, [avatarKey]);
-
-  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = String(reader.result);
-      setAvatar(url);
-      try {
-        localStorage.setItem(avatarKey, url);
-      } catch {
-        // image too large for storage — keep in memory
-      }
-    };
-    reader.readAsDataURL(file);
-  }
 
   return (
     <div>
-      <h1 className="mb-1 text-[22px] font-medium text-ink">Account &amp; settings</h1>
+      <h1 className="mb-1 text-[22px] font-medium text-ink">Settings</h1>
       <p className="mb-5 text-[14px] text-ink-2">
-        Signed in as {user.name} · {ROLE_LABELS[role]}
+        Signed in as {user.name} · {ROLE_LABELS[role]} · your personal details live in{" "}
+        <Link href="/profile" className="text-gold hover:opacity-80">Profile</Link>
       </p>
 
       <div className="space-y-5">
-        <Card className="p-5">
-          <SectionTitle icon={<User size={16} />} title="Your profile" />
-          <div className="flex items-center gap-4">
-            {avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatar} alt="" className="h-14 w-14 rounded-full object-cover" />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft text-[18px] font-medium text-gold">
-                {user.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-              </div>
-            )}
-            <div className="flex-1">
-              <p className="text-[15px] font-medium text-ink">{user.name}</p>
-              <p className="text-[13px] text-ink-2">{user.email}</p>
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="rounded-[8px] border border-border px-3 py-1.5 text-[13px] text-ink-2 hover:border-border-strong"
-            >
-              {avatar ? "Change photo" : "Upload photo"}
-            </button>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
-            <button className="flex items-center gap-1.5 rounded-[8px] border border-border px-3 py-1.5 text-[13px] text-ink-2 hover:border-border-strong">
-              <KeyRound size={14} /> Reset password
-            </button>
-          </div>
-        </Card>
-
         {isClient && !isOwner && <ClientTeamPanel />}
         {isOwner && <AdminPanel />}
 
@@ -134,8 +78,6 @@ function AdminPanel() {
 
   return (
     <>
-      <ConnectorsPanel />
-
       <UserManager />
 
       <Card className="p-5">
@@ -158,7 +100,11 @@ function AdminPanel() {
           {CLIENT_ORDER.map((id) => {
             const c = clientMeta(id)!;
             return (
-              <div key={id} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
+              <Link
+                key={id}
+                href={`/clients/${id}`}
+                className="flex items-center gap-3 border-b border-border py-2.5 last:border-0 hover:bg-surface-2"
+              >
                 <HealthDot status={c.status === "active" ? "good" : "neutral"} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] text-ink">{c.name}</p>
@@ -166,8 +112,8 @@ function AdminPanel() {
                     {c.serviceType} · {formatEngagement(c)}
                   </p>
                 </div>
-                <button className="text-[12.5px] text-ink-3 hover:text-ink">Manage</button>
-              </div>
+                <span className="text-[12.5px] text-gold">Manage →</span>
+              </Link>
             );
           })}
         </div>

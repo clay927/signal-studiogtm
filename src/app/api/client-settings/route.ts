@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  let body: { client?: string; status?: string; serviceType?: string };
+  let body: { client?: string; status?: string; serviceType?: string; terms?: string };
   try {
     body = await req.json();
   } catch {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
   if (!body.client) return NextResponse.json({ ok: false, error: "missing client" }, { status: 400 });
   try {
-    await upsertClientSettings(body.client, { status: body.status, serviceType: body.serviceType });
+    await upsertClientSettings(body.client, { status: body.status, serviceType: body.serviceType, terms: body.terms });
     let applied: string[] = [];
     if (body.status === "paused" || body.status === "inactive") {
       await disableClientConnectors(body.client);
