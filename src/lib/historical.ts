@@ -100,6 +100,8 @@ export const CALLS_MONTHLY: MonthlyCalls[] = [
   { clientId: "secondchair", month: "2026-04", dials: 5065, callbacks: null, connects: 92, conversations: 53, meetings: 11 },
   { clientId: "screensteps", month: "2026-06", dials: 555, callbacks: null, connects: 12, conversations: 3, meetings: 0 },
   { clientId: "screensteps", month: "2026-07", dials: 53, callbacks: null, connects: 1, conversations: 1, meetings: 0 },
+  { clientId: "yeticonnect", month: "2026-06", dials: 1414, callbacks: null, connects: 80, conversations: 18, meetings: 0 },
+  { clientId: "yeticonnect", month: "2026-07", dials: 418, callbacks: null, connects: 21, conversations: 9, meetings: 0 },
 ];
 
 export const EMAIL_CAMPAIGNS: EmailCampaign[] = [

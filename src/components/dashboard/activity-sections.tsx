@@ -85,8 +85,9 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
   const total = [...perClient.values()].reduce(addTotals, ZERO);
   const flaxSelected = selected.includes("flax");
 
-  // YetiConnect weekly rollups (own taxonomy) — shown as a separate labeled
-  // row, never mixed into the funnel totals above it.
+  // YetiConnect's second dialer (Derek on Nooks): weekly rollups with their
+  // own outcome taxonomy — shown as a separate labeled row, never mixed into
+  // the funnel totals. (The Orum side is in CALLS_MONTHLY and counts above.)
   const yetiWeeks = selected.includes("yeticonnect")
     ? YETI_CALL_WEEKS.filter((w) => monthSet.has(w.weekStart.slice(0, 7)))
     : [];
@@ -143,7 +144,7 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
               ))}
               {yeti && (
                 <tr className="border-b border-border/60 last:border-0">
-                  <td className="py-1.5 text-ink">YetiConnect <span className="text-ink-3">†</span></td>
+                  <td className="py-1.5 text-ink">YetiConnect — Nooks dialer (Derek) <span className="text-ink-3">†</span></td>
                   <td className="tabular py-1.5 text-right text-ink">{num(yeti.dials)}</td>
                   <td className="tabular py-1.5 text-right text-ink-3">—</td>
                   <td className="tabular py-1.5 text-right text-ink-3">—</td>
@@ -155,8 +156,9 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
           </table>
           {yeti && (
             <p className="mt-2 text-[11.5px] text-ink-3">
-              † YetiConnect's tracker uses its own outcome taxonomy (no connect/conversation counts), so it's excluded from
-              the funnel totals above. Scope to YetiConnect for the full breakdown.
+              † YetiConnect runs two dialers: the Orum side (row above) has full funnel data and counts in the totals; the
+              Nooks tracker reports only calls + meetings in its own taxonomy, so it's listed separately and excluded from
+              the funnel totals. Scope to YetiConnect for the full breakdown.
             </p>
           )}
         </>

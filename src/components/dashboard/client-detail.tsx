@@ -322,20 +322,34 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
   const rows = CALLS_MONTHLY.filter((r) => r.clientId === clientId && monthSet.has(r.month));
   const all = live && monthSet.has(live.month) ? [...rows, live] : rows;
 
-  // YetiConnect: weekly outcome rollups from the tracker (own taxonomy).
+  // YetiConnect runs TWO dialers (confirmed by Clay): Brandon's team on Orum
+  // (per-call export with real funnel flags, in CALLS_MONTHLY) and Derek on
+  // Nooks (tracker weekly rollups, own outcome taxonomy). Official dial
+  // volume = both summed; the funnel rates come from the Orum side only.
   if (clientId === "yeticonnect") {
     const weeks = YETI_CALL_WEEKS.filter((w) => monthSet.has(w.weekStart.slice(0, 7)));
     if (weeks.length === 0 && all.length === 0) {
       return (
         <Card className="p-5">
           <SectionTitle icon={<Phone size={16} />} title="Calls" />
-          <EmptyState title="No calling data in this range" body="YetiConnect's tracker covers late June onward — widen the date range to see it." />
+          <EmptyState title="No calling data in this range" body="YetiConnect's calling history covers June onward — widen the date range to see it." />
           <CallLog clientId={clientId} />
         </Card>
       );
     }
-    const dials = weeks.reduce((a, w) => a + w.callsMade, 0);
-    const meetings = weeks.reduce((a, w) => a + w.meetingsBooked, 0);
+    const nooks = {
+      dials: weeks.reduce((a, w) => a + w.callsMade, 0),
+      meetings: weeks.reduce((a, w) => a + w.meetingsBooked, 0),
+    };
+    const orum = all.reduce(
+      (a, r) => ({
+        dials: a.dials + r.dials,
+        connects: a.connects + r.connects,
+        conversations: a.conversations + r.conversations,
+        meetings: a.meetings + r.meetings,
+      }),
+      { dials: 0, connects: 0, conversations: 0, meetings: 0 }
+    );
     const outcomeTotals = new Map<string, number>();
     for (const w of weeks) for (const o of w.outcomes) outcomeTotals.set(o.label, (outcomeTotals.get(o.label) ?? 0) + o.count);
     return (
@@ -343,16 +357,41 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
         <SectionTitle
           icon={<Phone size={16} />}
           title="Calls"
-          right={<span className="text-[12px] text-ink-3">weekly rollups · Client Tracker sheet</span>}
+          right={<span className="text-[12px] text-ink-3">two dialers · Orum + Nooks summed</span>}
         />
-        <CallStats dials={dials} callbacks={null} connects={null} conversations={null} meetings={meetings} />
+        <CallStats
+          dials={nooks.dials + orum.dials}
+          callbacks={null}
+          connects={null}
+          conversations={null}
+          meetings={nooks.meetings + orum.meetings}
+        />
         <p className="mt-2 text-[11.5px] text-ink-3">
-          The tracker uses its own outcome labels (below) rather than connect/conversation counts — weeks count toward the
-          month they start in.
+          Connect/conversation rates aren't shown at the combined level — the Nooks tracker doesn't report them. The Orum
+          side's full funnel is below; Nooks weeks count toward the month they start in.
         </p>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+
+        <p className="mb-1 mt-4 text-[11px] uppercase tracking-wide text-ink-3">Orum dialer (per-call export)</p>
+        <CallStats dials={orum.dials} callbacks={null} connects={orum.connects} conversations={orum.conversations} meetings={orum.meetings} />
+        {all.length > 1 && (
+          <table className="mt-2 w-full text-[12.5px]">
+            <tbody>
+              {all.map((r) => (
+                <tr key={r.month} className="border-b border-border/60 last:border-0">
+                  <td className="py-1.5 text-ink">{monthLabel(r.month)}</td>
+                  <td className="tabular py-1.5 text-right text-ink-2">{num(r.dials)} dials</td>
+                  <td className="tabular py-1.5 text-right text-ink-2">{num(r.connects)} connects</td>
+                  <td className="tabular py-1.5 text-right text-ink-2">{num(r.conversations)} conversations</td>
+                  <td className="tabular py-1.5 text-right text-ink-2">{num(r.meetings)} mtgs</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-[11px] uppercase tracking-wide text-ink-3">By week</p>
+            <p className="mb-1 text-[11px] uppercase tracking-wide text-ink-3">Nooks dialer (Derek) — by week</p>
             <table className="w-full text-[12.5px]">
               <tbody>
                 {weeks.map((w) => (
@@ -366,7 +405,7 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
             </table>
           </div>
           <div>
-            <p className="mb-1 text-[11px] uppercase tracking-wide text-ink-3">Outcomes in range</p>
+            <p className="mb-1 text-[11px] uppercase tracking-wide text-ink-3">Nooks outcomes in range</p>
             <table className="w-full text-[12.5px]">
               <tbody>
                 {[...outcomeTotals.entries()].sort((a, b) => b[1] - a[1]).map(([label, count]) => (
