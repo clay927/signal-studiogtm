@@ -68,6 +68,7 @@ export function CallStats({
 interface LogRow {
   ts: number; // for sorting; 0 when unparseable
   when: string;
+  client: string;
   name: string;
   company: string;
   rep: string;
@@ -139,28 +140,39 @@ function fetchExportLog(): Promise<ExportCall[]> {
   return exportLogCache;
 }
 
-export function CallLog({ clientId }: { clientId: string }) {
+export function CallLog({ clientIds }: { clientIds: string[] }) {
   const [liveCalls, setLiveCalls] = useState<LogRow[]>([]);
   const [exportRows, setExportRows] = useState<LogRow[]>([]);
   const [repFilter, setRepFilter] = useState("");
   const [outcomeFilter, setOutcomeFilter] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
+  const clientsKey = clientIds.join(",");
+  const showClient = clientIds.length > 1;
 
   useEffect(() => {
     let on = true;
-    fetch(`/api/calls?client=${clientId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!on || !d.ok || !Array.isArray(d.calls)) return;
-        setLiveCalls(
-          (d.calls as ApiCall[]).map((c) => {
+    const ids = clientsKey ? clientsKey.split(",") : [];
+    Promise.all(
+      ids.map((id) =>
+        fetch(`/api/calls?client=${id}`)
+          .then((r) => r.json())
+          .then((d) => [id, d.ok && Array.isArray(d.calls) ? (d.calls as ApiCall[]) : []] as const)
+          .catch(() => [id, [] as ApiCall[]] as const)
+      )
+    ).then((pairs) => {
+      if (!on) return;
+      setLiveCalls(
+        pairs.flatMap(([id, calls]) =>
+          calls.map((c) => {
             const { ts, when } = parseWhen(c.at);
             return {
               ts,
               when,
+              client: id,
               name: c.prospect || "—",
               company: c.company || "",
               rep: c.rep || "—",
@@ -173,24 +185,26 @@ export function CallLog({ clientId }: { clientId: string }) {
               list: "",
             };
           })
-        );
-      })
-      .catch(() => {});
+        )
+      );
+    });
     return () => { on = false; };
-  }, [clientId]);
+  }, [clientsKey]);
 
   useEffect(() => {
     let on = true;
+    const ids = new Set(clientsKey.split(","));
     fetchExportLog().then((all) => {
       if (!on) return;
       setExportRows(
         all
-          .filter((c) => c.c === clientId)
+          .filter((c) => ids.has(c.c))
           .map((c) => {
             const { ts, when } = parseWhen(c.at);
             return {
               ts,
               when,
+              client: c.c,
               name: c.name,
               company: c.co,
               rep: c.rep,
@@ -206,15 +220,16 @@ export function CallLog({ clientId }: { clientId: string }) {
       );
     });
     return () => { on = false; };
-  }, [clientId]);
+  }, [clientsKey]);
 
   const histRows = useMemo<LogRow[]>(() => {
-    if (clientId !== "yeticonnect") return [];
+    if (!clientsKey.split(",").includes("yeticonnect")) return [];
     return YETI_CALL_LOG.map((c) => {
       const { ts, when } = parseWhen(c.calledAt);
       return {
         ts,
         when,
+        client: "yeticonnect",
         name: c.name,
         company: c.company,
         rep: c.rep || "—",
@@ -227,7 +242,7 @@ export function CallLog({ clientId }: { clientId: string }) {
         list: c.list,
       };
     });
-  }, [clientId]);
+  }, [clientsKey]);
 
   const rows = useMemo(
     () => [...liveCalls, ...exportRows, ...histRows].sort((a, b) => b.ts - a.ts),
@@ -235,8 +250,10 @@ export function CallLog({ clientId }: { clientId: string }) {
   );
   const reps = useMemo(() => [...new Set(rows.map((r) => r.rep).filter((r) => r !== "—"))].sort(), [rows]);
   const outcomes = useMemo(() => [...new Set(rows.map((r) => r.outcome).filter((o) => o !== "—"))].sort(), [rows]);
+  const logClients = useMemo(() => [...new Set(rows.map((r) => r.client))], [rows]);
 
   const filtered = rows.filter((r) => {
+    if (clientFilter && r.client !== clientFilter) return false;
     if (repFilter && r.rep !== repFilter) return false;
     if (outcomeFilter && r.outcome !== outcomeFilter) return false;
     if (fromDate && r.ts && r.ts < new Date(fromDate + "T00:00:00").getTime()) return false;
@@ -255,6 +272,14 @@ export function CallLog({ clientId }: { clientId: string }) {
         <p className="mr-auto text-[13px] font-medium text-ink">
           Call log <span className="text-ink-3">· {num(filtered.length)} of {num(rows.length)} calls</span>
         </p>
+        {showClient && (
+          <select value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className={selectCls}>
+            <option value="">All clients</option>
+            {logClients.map((c) => (
+              <option key={c} value={c}>{clientMeta(c)?.name ?? c}</option>
+            ))}
+          </select>
+        )}
         <select value={repFilter} onChange={(e) => setRepFilter(e.target.value)} className={selectCls}>
           <option value="">All SDRs</option>
           {reps.map((r) => (
@@ -277,6 +302,7 @@ export function CallLog({ clientId }: { clientId: string }) {
           <thead>
             <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-ink-3">
               <th className="py-1.5 font-medium">Date · time</th>
+              {showClient && <th className="py-1.5 font-medium">Client</th>}
               <th className="py-1.5 font-medium">Contact</th>
               <th className="py-1.5 font-medium">SDR</th>
               <th className="py-1.5 font-medium">Outcome</th>
@@ -293,6 +319,7 @@ export function CallLog({ clientId }: { clientId: string }) {
                   r={r}
                   open={open}
                   hasDetail={hasDetail}
+                  showClient={showClient}
                   onToggle={() => setExpanded(open ? null : i)}
                 />
               );
@@ -314,11 +341,13 @@ function FragmentRow({
   r,
   open,
   hasDetail,
+  showClient,
   onToggle,
 }: {
   r: LogRow;
   open: boolean;
   hasDetail: boolean;
+  showClient: boolean;
   onToggle: () => void;
 }) {
   return (
@@ -335,6 +364,7 @@ function FragmentRow({
             {r.when}
           </span>
         </td>
+        {showClient && <td className="whitespace-nowrap py-2 text-ink-2">{clientMeta(r.client)?.name ?? r.client}</td>}
         <td className="py-2">
           <span className="block font-medium text-ink">{r.name}</span>
           {r.company && <span className="block text-[11.5px] text-ink-3">{r.company}</span>}
@@ -360,7 +390,7 @@ function FragmentRow({
       </tr>
       {open && (
         <tr className="border-b border-border/60">
-          <td colSpan={5} className="bg-surface-2/60 px-3 py-3">
+          <td colSpan={showClient ? 6 : 5} className="bg-surface-2/60 px-3 py-3">
             <div className="space-y-2.5 text-[12.5px]">
               {r.list && (
                 <p className="text-ink-2"><span className="font-medium text-ink">List:</span> {r.list}</p>
@@ -444,7 +474,7 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
         <Card className="p-5">
           <SectionTitle icon={<Phone size={16} />} title="Calls" />
           <EmptyState title="No calling data in this range" body="YetiConnect's calling history covers June onward — widen the date range to see it." />
-          <CallLog clientId={clientId} />
+          <CallLog clientIds={[clientId]} />
         </Card>
       );
     }
@@ -529,7 +559,7 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
             </table>
           </div>
         </div>
-        <CallLog clientId={clientId} />
+        <CallLog clientIds={[clientId]} />
       </Card>
     );
   }
@@ -570,7 +600,7 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
           title="No calling data in this range"
           body="No calling history was imported for this client in the selected months, and no live dialer events have arrived. Live tracking starts as soon as a dialer connector fires."
         />
-        <CallLog clientId={clientId} />
+        <CallLog clientIds={[clientId]} />
       </Card>
     );
   }
@@ -629,7 +659,7 @@ export function CallsPanel({ clientId, months }: { clientId: string; months: str
         </table>
       )}
 
-      <CallLog clientId={clientId} />
+      <CallLog clientIds={[clientId]} />
     </Card>
   );
 }

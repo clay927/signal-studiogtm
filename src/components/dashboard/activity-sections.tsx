@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { Phone, Contact, Mail } from "lucide-react";
 import { Card, SectionTitle, EmptyState, Pill } from "@/components/ui";
-import { CallStats, FunnelTile } from "@/components/dashboard/client-detail";
+import { CallLog, CallStats, FunnelTile } from "@/components/dashboard/client-detail";
 import { num, ratePct } from "@/lib/format";
 import { monthKey } from "@/lib/history";
 import { clientName } from "@/lib/clients";
@@ -179,6 +179,10 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
           {num(FLAX_CALL_TOTALS.meetings)} meetings. Scope to Flax for the full breakdown.
         </p>
       )}
+
+      {/* Every individual call across the selected clients — click a row for
+          labels, notes, and the transcript. */}
+      <CallLog clientIds={selected} />
     </Card>
   );
 }
