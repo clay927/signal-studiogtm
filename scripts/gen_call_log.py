@@ -64,19 +64,25 @@ def main():
         if not client:
             skipped += 1
             continue
-        rows.append(
-            {
-                "c": client,
-                "at": iso_at(r["Called At"]),
-                "name": r["Prospect"] or "—",
-                "co": r["Account"] or r["Contact Company Name"] or "",
-                "rep": r["Rep"] or "—",
-                "out": r["Disposition"] or "—",
-                "tone": tone_of(r),
-                "rec": r["Recording"] or "",
-                "list": r["List"] or "",
-            }
-        )
+        row = {
+            "c": client,
+            "at": iso_at(r["Called At"]),
+            "name": r["Prospect"] or "—",
+            "co": r["Account"] or r["Contact Company Name"] or "",
+            "rep": r["Rep"] or "—",
+            "out": r["Disposition"] or "—",
+            "tone": tone_of(r),
+            "rec": r["Recording"] or "",
+            "list": r["List"] or "",
+        }
+        # Expanded-row detail: transcript text, AI note, objections (omitted when empty).
+        if r["Transcript"]:
+            row["tr"] = r["Transcript"]
+        if r["Note"]:
+            row["note"] = r["Note"]
+        if r["Objections"]:
+            row["obj"] = r["Objections"]
+        rows.append(row)
 
     rows.sort(key=lambda x: x["at"], reverse=True)
     with open(OUT, "w") as f:

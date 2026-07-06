@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Phone, Contact, Mail, Radio, FileText } from "lucide-react";
+import { Phone, Contact, Mail, Radio, FileText, ChevronRight } from "lucide-react";
 import { Card, SectionTitle, EmptyState, Pill } from "@/components/ui";
 import { LiveFeed } from "@/components/live-feed";
 import { num, ratePct } from "@/lib/format";
@@ -73,8 +73,15 @@ interface LogRow {
   rep: string;
   outcome: string;
   tone: "good" | "warn" | "bad" | "neutral";
+  /** URL (Orum/Nooks link) or inline transcript text */
   transcript: string;
+  recording: string;
+  note: string;
+  objection: string;
+  list: string;
 }
+
+const isUrl = (s: string) => /^https?:\/\//.test(s);
 
 const YETI_OUTCOME_TONE: Record<string, "good" | "warn" | "bad" | "neutral"> = {
   "Meeting booked": "good",
@@ -101,6 +108,8 @@ interface ApiCall {
   at: string;
   transcript: string;
   recording: string;
+  note: string;
+  objection: string;
 }
 
 // Per-call history from the Orum export (public/data/call-log.json,
@@ -115,6 +124,9 @@ interface ExportCall {
   tone: "good" | "warn" | "bad" | "neutral";
   rec: string;
   list: string;
+  tr?: string; // inline transcript text
+  note?: string; // AI-generated call notes
+  obj?: string; // objections
 }
 
 let exportLogCache: Promise<ExportCall[]> | null = null;
@@ -135,6 +147,7 @@ export function CallLog({ clientId }: { clientId: string }) {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     let on = true;
@@ -153,7 +166,11 @@ export function CallLog({ clientId }: { clientId: string }) {
               rep: c.rep || "—",
               outcome: c.disposition || "—",
               tone: c.tone ?? "neutral",
-              transcript: c.transcript || c.recording || "",
+              transcript: c.transcript || "",
+              recording: c.recording || "",
+              note: c.note || "",
+              objection: c.objection || "",
+              list: "",
             };
           })
         );
@@ -179,7 +196,11 @@ export function CallLog({ clientId }: { clientId: string }) {
               rep: c.rep,
               outcome: c.out,
               tone: c.tone,
-              transcript: c.rec,
+              transcript: c.tr ?? "",
+              recording: c.rec,
+              note: c.note ?? "",
+              objection: c.obj ?? "",
+              list: c.list,
             };
           })
       );
@@ -200,6 +221,10 @@ export function CallLog({ clientId }: { clientId: string }) {
         outcome: c.outcome,
         tone: YETI_OUTCOME_TONE[c.outcome] ?? "neutral",
         transcript: c.transcript,
+        recording: "",
+        note: "",
+        objection: "",
+        list: c.list,
       };
     });
   }, [clientId]);
@@ -259,26 +284,19 @@ export function CallLog({ clientId }: { clientId: string }) {
             </tr>
           </thead>
           <tbody>
-            {visible.map((r, i) => (
-              <tr key={i} className="border-b border-border/60 last:border-0">
-                <td className="tabular whitespace-nowrap py-2 text-ink-2">{r.when}</td>
-                <td className="py-2">
-                  <span className="block font-medium text-ink">{r.name}</span>
-                  {r.company && <span className="block text-[11.5px] text-ink-3">{r.company}</span>}
-                </td>
-                <td className="whitespace-nowrap py-2 text-ink">{r.rep}</td>
-                <td className="py-2"><Pill tone={r.tone}>{r.outcome}</Pill></td>
-                <td className="py-2 text-right">
-                  {r.transcript ? (
-                    <a href={r.transcript} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-gold hover:opacity-80">
-                      <FileText size={13} /> open
-                    </a>
-                  ) : (
-                    <span className="text-ink-3">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {visible.map((r, i) => {
+              const hasDetail = !!(r.transcript || r.note || r.objection || r.recording || r.list);
+              const open = expanded === i;
+              return (
+                <FragmentRow
+                  key={i}
+                  r={r}
+                  open={open}
+                  hasDetail={hasDetail}
+                  onToggle={() => setExpanded(open ? null : i)}
+                />
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -288,6 +306,99 @@ export function CallLog({ clientId }: { clientId: string }) {
         </button>
       )}
     </div>
+  );
+}
+
+/** One call row + its expandable detail (labels, AI note, objections, transcript). */
+function FragmentRow({
+  r,
+  open,
+  hasDetail,
+  onToggle,
+}: {
+  r: LogRow;
+  open: boolean;
+  hasDetail: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <tr
+        onClick={hasDetail ? onToggle : undefined}
+        className={`border-b border-border/60 last:border-0 ${hasDetail ? "cursor-pointer hover:bg-surface-2" : ""}`}
+      >
+        <td className="tabular whitespace-nowrap py-2 text-ink-2">
+          <span className="inline-flex items-center gap-1.5">
+            {hasDetail && (
+              <ChevronRight size={13} className={`text-ink-3 transition-transform ${open ? "rotate-90" : ""}`} />
+            )}
+            {r.when}
+          </span>
+        </td>
+        <td className="py-2">
+          <span className="block font-medium text-ink">{r.name}</span>
+          {r.company && <span className="block text-[11.5px] text-ink-3">{r.company}</span>}
+        </td>
+        <td className="whitespace-nowrap py-2 text-ink">{r.rep}</td>
+        <td className="py-2"><Pill tone={r.tone}>{r.outcome}</Pill></td>
+        <td className="py-2 text-right" onClick={(e) => e.stopPropagation()}>
+          {isUrl(r.transcript) || r.recording ? (
+            <a
+              href={isUrl(r.transcript) ? r.transcript : r.recording}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-gold hover:opacity-80"
+            >
+              <FileText size={13} /> open
+            </a>
+          ) : r.transcript ? (
+            <button onClick={onToggle} className="text-gold hover:opacity-80">view</button>
+          ) : (
+            <span className="text-ink-3">—</span>
+          )}
+        </td>
+      </tr>
+      {open && (
+        <tr className="border-b border-border/60">
+          <td colSpan={5} className="bg-surface-2/60 px-3 py-3">
+            <div className="space-y-2.5 text-[12.5px]">
+              {r.list && (
+                <p className="text-ink-2"><span className="font-medium text-ink">List:</span> {r.list}</p>
+              )}
+              {r.objection && (
+                <p className="text-ink-2"><span className="font-medium text-ink">Objections:</span> {r.objection}</p>
+              )}
+              {r.note && (
+                <div>
+                  <p className="mb-0.5 font-medium text-ink">Call notes</p>
+                  <p className="whitespace-pre-wrap text-ink-2">{r.note}</p>
+                </div>
+              )}
+              {r.transcript && !isUrl(r.transcript) && (
+                <div>
+                  <p className="mb-0.5 font-medium text-ink">Transcript</p>
+                  <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-[8px] border border-border bg-surface p-2.5 text-ink-2">
+                    {r.transcript}
+                  </p>
+                </div>
+              )}
+              <div className="flex gap-4">
+                {isUrl(r.transcript) && (
+                  <a href={r.transcript} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-gold hover:opacity-80">
+                    <FileText size={13} /> Full transcript
+                  </a>
+                )}
+                {r.recording && (
+                  <a href={r.recording} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-gold hover:opacity-80">
+                    <Radio size={13} /> Recording
+                  </a>
+                )}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 

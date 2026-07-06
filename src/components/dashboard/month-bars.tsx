@@ -31,16 +31,16 @@ export function MonthBars({ points }: { points: MonthPoint[] }) {
             {points.map((p) => (
               <div key={p.month} className="group relative flex h-full flex-1 items-end justify-center gap-1">
                 {/* Hover tooltip */}
-                <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[8px] bg-navy px-2.5 py-1.5 text-[11.5px] text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 dark:bg-white dark:text-navy">
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[8px] bg-ink px-2.5 py-1.5 text-[11.5px] text-page opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                   <span className="font-medium">{monthLabel(p.month)}</span> · {num(p.scheduled)} scheduled ·{" "}
                   {num(p.held)} held
                 </div>
                 <div
-                  className="w-full max-w-[26px] rounded-t-[3px] bg-navy/35 transition-opacity group-hover:opacity-80 dark:bg-white/15"
+                  className="w-full max-w-[26px] rounded-t-[3px] bg-gold transition-opacity group-hover:opacity-80"
                   style={{ height: h(p.scheduled) }}
                 />
                 <div
-                  className="w-full max-w-[26px] rounded-t-[3px] bg-navy transition-opacity group-hover:opacity-80 dark:bg-gold"
+                  className="w-full max-w-[26px] rounded-t-[3px] bg-ink transition-opacity group-hover:opacity-80"
                   style={{ height: h(p.held) }}
                 />
               </div>
@@ -58,10 +58,10 @@ export function MonthBars({ points }: { points: MonthPoint[] }) {
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-4 text-[11.5px] text-ink-2">
             <span className="flex items-center gap-1.5">
-              <i className="inline-block h-2 w-2 rounded-[2px] bg-navy/35 dark:bg-white/15" /> Scheduled
+              <i className="inline-block h-2 w-2 rounded-[2px] bg-gold" /> Scheduled
             </span>
             <span className="flex items-center gap-1.5">
-              <i className="inline-block h-2 w-2 rounded-[2px] bg-navy dark:bg-gold" /> Held
+              <i className="inline-block h-2 w-2 rounded-[2px] bg-ink" /> Held
             </span>
           </div>
           <span className="text-[10.5px] text-ink-3">month · {years}</span>
@@ -79,7 +79,7 @@ export function Spark({ values }: { values: number[] }) {
       {values.map((v, i) => (
         <i
           key={i}
-          className="flex-1 rounded-[1px] bg-navy/40 dark:bg-white/25 [&:last-child]:bg-gold"
+          className="flex-1 rounded-[1px] bg-ink/35 [&:last-child]:bg-gold"
           style={{ height: `${Math.max(v > 0 ? 12 : 6, Math.round((v / max) * 100))}%` }}
         />
       ))}
