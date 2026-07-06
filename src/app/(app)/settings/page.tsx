@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSession, ROLE_LABELS } from "@/lib/session";
-import { CLIENTS, CLIENT_ORDER } from "@/lib/data";
+import { CLIENT_ORDER, clientMeta, formatEngagement } from "@/lib/clients";
 import { Card, SectionTitle, Pill, HealthDot } from "@/components/ui";
-import { STATUS_DOT } from "@/components/shell/topbar";
 import { ConnectorsPanel } from "@/components/connectors-panel";
 import { UserManager } from "@/components/user-manager";
 import { User, Users, Building2, KeyRound, Plus, Lock } from "lucide-react";
@@ -157,14 +156,14 @@ function AdminPanel() {
 
         <div className="mt-1 space-y-2">
           {CLIENT_ORDER.map((id) => {
-            const c = CLIENTS[id].client;
+            const c = clientMeta(id)!;
             return (
               <div key={id} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
-                <HealthDot status={STATUS_DOT[c.status]} />
+                <HealthDot status={c.status === "active" ? "good" : "neutral"} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] text-ink">{c.name}</p>
                   <p className="truncate text-[12px] text-ink-3">
-                    {c.industry} · owner {c.accountOwner} · SDRs: {c.sdrs.join(", ")}
+                    {c.serviceType} · {formatEngagement(c)}
                   </p>
                 </div>
                 <button className="text-[12.5px] text-ink-3 hover:text-ink">Manage</button>

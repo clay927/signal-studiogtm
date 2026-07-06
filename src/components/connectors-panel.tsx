@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@/lib/session";
-import { CLIENTS } from "@/lib/data";
+import { clientName } from "@/lib/clients";
+import { ClientSelect } from "@/components/client-select";
 import {
   CONNECTORS,
   CATEGORY_LABELS,
@@ -31,7 +32,7 @@ const CATEGORY_ICON: Record<ConnectorCategory, React.ReactNode> = {
 
 export function ConnectorsPanel() {
   const { clientId } = useSession();
-  const client = CLIENTS[clientId].client;
+  const client = { name: clientName(clientId) };
   const [rows, setRows] = useState<Record<string, Row>>({});
   const [inputs, setInputs] = useState<Record<string, { secret: string; apiKey: string }>>({});
   const [openId, setOpenId] = useState<string | null>(null);
@@ -83,7 +84,11 @@ export function ConnectorsPanel() {
       <SectionTitle
         icon={<Plug size={16} />}
         title="Connectors"
-        right={<span className="text-[12px] text-ink-3">{connectedCount} connected · for {client.name}</span>}
+        right={
+          <span className="flex items-center gap-2 text-[12px] text-ink-3">
+            {connectedCount} connected · <ClientSelect />
+          </span>
+        }
       />
 
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">

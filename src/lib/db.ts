@@ -57,6 +57,17 @@ const SCHEMA_STATEMENTS = [
    )`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token text NOT NULL DEFAULT ''`,
+  `CREATE TABLE IF NOT EXISTS results_monthly (
+     client_id text NOT NULL,
+     month text NOT NULL,
+     closed_won numeric,
+     new_pipeline numeric,
+     meetings_held integer,
+     meetings_scheduled integer,
+     source text NOT NULL DEFAULT 'manual',
+     updated_at timestamptz NOT NULL DEFAULT now(),
+     PRIMARY KEY (client_id, month)
+   )`,
 ];
 
 let schemaPromise: Promise<void> | null = null;
@@ -200,6 +211,51 @@ export async function eventCounts(clientId: string): Promise<{ total: number; to
     FROM webhook_events WHERE client_id = ${clientId}
   `;
   return { total: (rows[0]?.total as number) ?? 0, today: (rows[0]?.today as number) ?? 0 };
+}
+
+// ---- Monthly results (going-forward entry; overrides/extends the historical import) ----
+
+export interface ResultsMonthlyRow {
+  client_id: string;
+  month: string;
+  closed_won: number | null;
+  new_pipeline: number | null;
+  meetings_held: number | null;
+  meetings_scheduled: number | null;
+  source: string;
+}
+
+export async function listResultsMonthly(): Promise<ResultsMonthlyRow[]> {
+  const sql = await db();
+  const rows = await sql`
+    SELECT client_id, month, closed_won::float8 AS closed_won, new_pipeline::float8 AS new_pipeline,
+           meetings_held, meetings_scheduled, source
+    FROM results_monthly ORDER BY month
+  `;
+  return rows as ResultsMonthlyRow[];
+}
+
+export async function upsertResultsMonthly(r: {
+  clientId: string;
+  month: string;
+  closedWon: number | null;
+  newPipeline: number | null;
+  meetingsHeld: number | null;
+  meetingsScheduled: number | null;
+  source?: string;
+}): Promise<void> {
+  const sql = await db();
+  await sql`
+    INSERT INTO results_monthly (client_id, month, closed_won, new_pipeline, meetings_held, meetings_scheduled, source, updated_at)
+    VALUES (${r.clientId}, ${r.month}, ${r.closedWon}, ${r.newPipeline}, ${r.meetingsHeld}, ${r.meetingsScheduled}, ${r.source ?? "manual"}, now())
+    ON CONFLICT (client_id, month) DO UPDATE SET
+      closed_won = ${r.closedWon},
+      new_pipeline = ${r.newPipeline},
+      meetings_held = ${r.meetingsHeld},
+      meetings_scheduled = ${r.meetingsScheduled},
+      source = ${r.source ?? "manual"},
+      updated_at = now()
+  `;
 }
 
 // ---- Client settings (status / service type) ----

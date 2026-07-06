@@ -1,0 +1,22 @@
+client,segment,list_name,dials,connects,conversations,meetings,callbacks,callback_connects,dial_time_sec,talk_time_sec
+flax,sdr_dialer,LB - FLAX T. 1 Executives Only,1647,70,11,1,16,0,36403,2762
+flax,sdr_dialer,Flax - ACHA Didn't Meet (Attempting),1206,30,14,0,10,0,26020,1892
+flax,sdr_dialer,BL_CAHF Event 2025 (Attempting),943,36,26,1,1,0,41070,3911
+flax,sdr_dialer,BL_PACS (Attempting),864,53,31,4,5,3,21289,5350
+flax,sdr_dialer,Flax - ACHA Met (Attempting),330,4,1,0,1,0,8129,218
+flax,sdr_dialer,LB - Tier 1 Administrators CMS FLAX  (Attempting),287,19,4,0,8,0,6629,796
+flax,sdr_dialer,LB_Vi Living,80,1,1,0,0,0,1866,103
+flax,sdr_dialer,LB_American_Senior_Communities,30,1,0,0,0,0,801,0
+flax,sdr_dialer,All sequence due tasks,8,0,0,0,0,0,113,0
+flax,sdr_dialer,BL - AXON,8,4,2,0,0,0,98,208
+flax,sdr_dialer,Flax - AHCA Met in Person,7,0,0,0,0,0,299,0
+flax,sdr_dialer,LB_Care_Roanoke,7,0,0,0,0,0,290,0
+flax,sdr_dialer,Flax - AHCA Didn't Meet,3,0,0,0,0,0,171,0
+flax,blake_clay,Flax - ACHA Didn't Meet (Attempting),307,23,16,4,11,1,8333,4273
+flax,blake_clay,Flax - ACHA Met (Attempting),185,11,10,1,2,0,5259,2660
+flax,blake_clay,Flax - AHCA Met in Person,97,16,8,1,1,0,4037,1807
+flax,blake_clay,BH - FLAX T. 1 Executives Only,86,4,2,0,3,0,2728,271
+flax,blake_clay,BH - Tier 1 Administrators CMS  (Attempting),86,1,0,0,1,0,3602,36
+flax,blake_clay,CT_FLAX LGM Opened,78,8,8,1,1,1,3278,1677
+flax,blake_clay,Flax - AHCA Didn't Meet,54,1,1,0,0,0,1913,106
+flax,blake_clay,CT - Tier 1 Administrators CMS  (Attempting),35,1,0,0,0,0,1251,37

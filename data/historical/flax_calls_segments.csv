@@ -1,0 +1,6 @@
+client,segment,dials,connects,conversations,meetings,source
+flax,sdr_dialer,5420,218,90,6,flax_dials_workbook
+flax,trellus_brandon,2921,92,54,,flax_dials_workbook
+flax,brandon_june_orum,309,30,7,1,flax_dials_workbook
+flax,blake_clay,928,65,45,7,flax_dials_workbook
+flax,ALL_TIME_TOTAL,9578,405,196,29,flax_dials_workbook header

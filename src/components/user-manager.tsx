@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CLIENTS, CLIENT_ORDER } from "@/lib/data";
+import { clientName, CLIENT_ORDER } from "@/lib/clients";
 import { ROLE_LABELS } from "@/lib/session";
 import { Card, SectionTitle, Pill } from "@/components/ui";
 import { ShieldCheck, Plus, Trash2, Link2, Copy, Check } from "lucide-react";
@@ -149,7 +149,7 @@ export function UserManager() {
                     })
                   }
                 />
-                {CLIENTS[id].client.name}
+                {clientName(id)}
               </label>
             ))}
           </div>
@@ -208,7 +208,7 @@ export function UserManager() {
                     </select>
                   </td>
                   <td className="py-2.5 pr-3 text-[12px] text-ink-2">
-                    {u.role === "owner" ? "All clients" : u.client_access.length ? u.client_access.map((a) => CLIENTS[a]?.client.name ?? a).join(", ") : "—"}
+                    {u.role === "owner" ? "All clients" : u.client_access.length ? u.client_access.map((a) => clientName(a)).join(", ") : "—"}
                   </td>
                   <td className="py-2.5 pr-3">
                     <button

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { CLIENT_ORDER } from "./data";
+import { CLIENT_ORDER } from "./clients";
 import type { Role, User } from "./types";
 
 export type DateRange = "today" | "this_week" | "last_week" | "this_month" | "custom";

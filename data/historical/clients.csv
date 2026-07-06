@@ -1,0 +1,8 @@
+client,display_name,status,service_type,engagement_start,engagement_end
+snoball,Snoball,active,msp,2026-01-01,
+flax,Flax AI,non_active,msp,2026-02-15,2026-06-30
+yeticonnect,YetiConnect,active,diagnostic,2026-05-15,
+screensteps,Screensteps,active,diagnostic,2026-04-01,2026-07-15
+secondchair,SecondChair,non_active,diagnostic,2026-03-01,2026-04-30
+roster,Roster,non_active,msp,2026-04-01,2026-05-31
+arya,Arya,non_active,msp,2026-01-01,2026-02-15

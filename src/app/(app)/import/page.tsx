@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useSession } from "@/lib/session";
 import { useData } from "@/lib/store";
-import { CLIENTS } from "@/lib/data";
+import { clientName } from "@/lib/clients";
+import { ClientSelect } from "@/components/client-select";
 import { parseMeetingsCsv, meetingsTemplateCsv, type ImportResult } from "@/lib/csv";
 import { deriveResults } from "@/lib/metrics";
 import { Card, SectionTitle, StatTile, Pill, EmptyState, SampleBadge } from "@/components/ui";
@@ -19,7 +20,7 @@ export default function ImportPage() {
   const [applied, setApplied] = useState(false);
 
   const isOwner = user.clientAccess === "all";
-  const client = CLIENTS[clientId].client;
+  const client = { name: clientName(clientId) };
   const existing = imports[clientId];
 
   if (!isOwner) {
@@ -68,8 +69,8 @@ export default function ImportPage() {
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[22px] font-medium text-ink">Import data</h1>
-          <p className="mt-0.5 text-[14px] text-ink-2">
-            Upload a vetted CSV for <span className="font-medium text-ink">{client.name}</span>. Pando checks every row, then shows you exactly what it computed.
+          <p className="mt-0.5 flex items-center gap-2 text-[14px] text-ink-2">
+            Upload a vetted CSV for <ClientSelect />. Pando checks every row, then shows you exactly what it computed.
           </p>
         </div>
         <SampleBadge />

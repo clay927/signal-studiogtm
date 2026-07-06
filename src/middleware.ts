@@ -10,6 +10,12 @@ const PUBLIC_PREFIXES = ["/login", "/set-password", "/api/auth", "/api/webhooks"
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Local-dev bypass: only honored outside production AND when explicitly set
+  // in .env.local (gitignored). Lets `npm run dev` work without the prod DB.
+  if (process.env.NODE_ENV !== "production" && process.env.PANDO_DEV_BYPASS === "1") {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?"))) {
     return NextResponse.next();
   }

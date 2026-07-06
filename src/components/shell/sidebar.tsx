@@ -6,9 +6,6 @@ import { useTheme } from "next-themes";
 import clsx from "clsx";
 import {
   LayoutDashboard,
-  Trophy,
-  Activity,
-  Building2,
   Settings,
   Sun,
   Moon,
@@ -20,19 +17,11 @@ import { useSession, ROLE_LABELS } from "@/lib/session";
 import { Menu, MenuItem, MenuLabel } from "@/components/menu";
 import { initials } from "@/lib/format";
 
-const NAV = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/results", label: "Results", icon: Trophy },
-  { href: "/activity", label: "Activity", icon: Activity },
-];
-
 export function Sidebar() {
   const pathname = usePathname();
   const { user, role, logout } = useSession();
   const { theme, setTheme } = useTheme();
-
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isOwner = user.clientAccess === "all";
 
   return (
     <aside className="flex h-dvh w-[232px] shrink-0 flex-col bg-sidebar px-3 py-4 text-sidebar-ink">
@@ -44,67 +33,19 @@ export function Sidebar() {
       </Link>
 
       <nav className="flex flex-col gap-1">
-        {NAV.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={clsx(
-              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
-              isActive(href)
-                ? "bg-navy-deep text-sidebar-ink-active"
-                : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
-            )}
-          >
-            <Icon size={18} strokeWidth={1.75} />
-            {label}
-          </Link>
-        ))}
+        <Link
+          href="/"
+          className={clsx(
+            "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
+            pathname === "/"
+              ? "bg-navy-deep text-sidebar-ink-active"
+              : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
+          )}
+        >
+          <LayoutDashboard size={18} strokeWidth={1.75} />
+          Main Dashboard
+        </Link>
       </nav>
-
-      {user.clientAccess === "all" && (
-        <>
-          <div className="my-3 h-px bg-white/10" />
-          <p className="px-3 pb-1 text-[11px] uppercase tracking-wide text-sidebar-ink/70">
-            Owner
-          </p>
-          <Link
-            href="/portfolio"
-            className={clsx(
-              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
-              isActive("/portfolio")
-                ? "bg-navy-deep text-sidebar-ink-active"
-                : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
-            )}
-          >
-            <Building2 size={18} strokeWidth={1.75} />
-            All clients
-          </Link>
-          <Link
-            href="/import"
-            className={clsx(
-              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
-              isActive("/import")
-                ? "bg-navy-deep text-sidebar-ink-active"
-                : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
-            )}
-          >
-            <Upload size={18} strokeWidth={1.75} />
-            Import data
-          </Link>
-          <Link
-            href="/settings"
-            className={clsx(
-              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14px] transition-colors",
-              isActive("/settings")
-                ? "bg-navy-deep text-sidebar-ink-active"
-                : "text-sidebar-ink hover:bg-navy-deep/60 hover:text-sidebar-ink-active"
-            )}
-          >
-            <Settings size={18} strokeWidth={1.75} />
-            Settings
-          </Link>
-        </>
-      )}
 
       <div className="mt-auto">
         <Menu
@@ -129,6 +70,20 @@ export function Sidebar() {
         >
           {(close) => (
             <>
+              <Link href="/settings" onClick={close}>
+                <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
+                  <Settings size={15} className="text-ink-3" /> Settings
+                </span>
+              </Link>
+              {isOwner && (
+                <Link href="/import" onClick={close}>
+                  <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
+                    <Upload size={15} className="text-ink-3" /> Import data
+                  </span>
+                </Link>
+              )}
+
+              <div className="my-1 h-px bg-border" />
               <MenuLabel>Appearance</MenuLabel>
               <MenuItem icon={<Sun size={15} />} active={theme === "light"} onClick={() => setTheme("light")}>
                 Light
@@ -141,11 +96,6 @@ export function Sidebar() {
               </MenuItem>
 
               <div className="my-1 h-px bg-border" />
-              <Link href="/settings" onClick={close}>
-                <span className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13.5px] text-ink hover:bg-surface-2">
-                  <Settings size={15} className="text-ink-3" /> Account &amp; settings
-                </span>
-              </Link>
               <MenuItem icon={<LogOut size={15} />} onClick={() => { close(); logout(); }}>
                 Log out
               </MenuItem>
