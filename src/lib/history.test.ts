@@ -3,6 +3,7 @@ import {
   filterMonthly,
   latestDataMonth,
   mergeMonthly,
+  monthsBetween,
   monthsForRange,
   perClientTotals,
   seriesByMonth,
@@ -62,6 +63,19 @@ describe("totals against the canonical MSP Results import", () => {
     expect(t.meetingsScheduled).toBe(0);
     expect(t.holdRate).toBeNull(); // never fabricated
     expect(t.hasData).toBe(true);
+  });
+});
+
+describe("monthsBetween (custom range)", () => {
+  it("inclusive span", () => {
+    expect(monthsBetween("2026-02", "2026-05")).toEqual(["2026-02", "2026-03", "2026-04", "2026-05"]);
+  });
+  it("single month + order-tolerant + year boundary", () => {
+    expect(monthsBetween("2026-04", "2026-04")).toEqual(["2026-04"]);
+    expect(monthsBetween("2026-02", "2025-12")).toEqual(["2025-12", "2026-01", "2026-02"]);
+  });
+  it("rejects malformed input", () => {
+    expect(monthsBetween("garbage", "2026-05")).toEqual([]);
   });
 });
 

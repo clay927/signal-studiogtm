@@ -15,6 +15,7 @@ import { Card, SectionTitle, StatTile, Pill, HealthDot } from "@/components/ui";
 import { MonthBars, Spark } from "@/components/dashboard/month-bars";
 import { FilterButton } from "@/components/dashboard/filter-button";
 import { CallsPanel, LinkedInPanel, EmailPanel, LivePanel } from "@/components/dashboard/client-detail";
+import { AggCallsSection, AggEmailSection, AggLinkedInSection } from "@/components/dashboard/activity-sections";
 import { useSession } from "@/lib/session";
 import { clientMeta, clientName, formatEngagement } from "@/lib/clients";
 import { RESULTS_MONTHLY, type MonthlyResults } from "@/lib/historical";
@@ -24,7 +25,9 @@ import {
   filterMonthly,
   latestDataMonth,
   mergeMonthly,
+  monthKey,
   monthLabel,
+  monthsBetween,
   monthsForRange,
   perClientTotals,
   seriesByMonth,
@@ -32,9 +35,19 @@ import {
 } from "@/lib/history";
 import { money, num, pct } from "@/lib/format";
 
-const RANGES: RangeKey[] = ["this_month", "quarter", "ytd"];
+const RANGES: RangeKey[] = ["this_month", "quarter", "ytd", "custom"];
 const SCOPE_KEY = "pando.dashboard.scope";
 const RANGE_KEY = "pando.dashboard.range";
+const CUSTOM_KEY = "pando.dashboard.customRange";
+const SECTION_KEY = "pando.dashboard.section";
+
+type SectionKey = "results" | "calls" | "email" | "linkedin";
+const SECTIONS: { key: SectionKey; label: string }[] = [
+  { key: "results", label: "Results" },
+  { key: "calls", label: "Calls" },
+  { key: "email", label: "Email" },
+  { key: "linkedin", label: "LinkedIn" },
+];
 
 interface DbResultRow {
   client_id: string;
@@ -48,16 +61,24 @@ interface DbResultRow {
 export default function DashboardPage() {
   const { clients } = useSession(); // ids this user can access (roster-ordered)
   const [range, setRange] = useState<RangeKey>("ytd");
+  const [customFrom, setCustomFrom] = useState("2026-01");
+  const [customTo, setCustomTo] = useState(() => monthKey(new Date()));
+  const [section, setSection] = useState<SectionKey>("results");
   const [selected, setSelected] = useState<string[]>([]);
   const [dbRows, setDbRows] = useState<MonthlyResults[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  // Restore persisted scope/range once we know the accessible client list.
+  // Restore persisted scope/range/section once we know the accessible client list.
   useEffect(() => {
     if (!clients.length || hydrated) return;
     try {
       const r = localStorage.getItem(RANGE_KEY) as RangeKey | null;
       if (r && RANGES.includes(r)) setRange(r);
+      const c = JSON.parse(localStorage.getItem(CUSTOM_KEY) ?? "null") as { from?: string; to?: string } | null;
+      if (c?.from) setCustomFrom(c.from);
+      if (c?.to) setCustomTo(c.to);
+      const sec = localStorage.getItem(SECTION_KEY) as SectionKey | null;
+      if (sec && SECTIONS.some((s) => s.key === sec)) setSection(sec);
       const s = JSON.parse(localStorage.getItem(SCOPE_KEY) ?? "[]") as string[];
       const valid = s.filter((id) => clients.includes(id));
       setSelected(valid.length ? valid : clients);
@@ -70,6 +91,15 @@ export default function DashboardPage() {
   const setRangePersist = (r: RangeKey) => {
     setRange(r);
     try { localStorage.setItem(RANGE_KEY, r); } catch {}
+  };
+  const setCustomPersist = (from: string, to: string) => {
+    setCustomFrom(from);
+    setCustomTo(to);
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify({ from, to })); } catch {}
+  };
+  const setSectionPersist = (s: SectionKey) => {
+    setSection(s);
+    try { localStorage.setItem(SECTION_KEY, s); } catch {}
   };
   const setSelectedPersist = (ids: string[]) => {
     setSelected(ids);
@@ -98,7 +128,10 @@ export default function DashboardPage() {
   }, []);
 
   const merged = useMemo(() => mergeMonthly(RESULTS_MONTHLY, dbRows), [dbRows]);
-  const months = useMemo(() => monthsForRange(range, new Date()), [range]);
+  const months = useMemo(
+    () => (range === "custom" ? monthsBetween(customFrom, customTo) : monthsForRange(range, new Date())),
+    [range, customFrom, customTo]
+  );
   const scope = useMemo(() => new Set(selected), [selected]);
   const rows = useMemo(() => filterMonthly(merged, scope, months), [merged, scope, months]);
   const totals = useMemo(() => totalResults(rows), [rows]);
@@ -151,19 +184,66 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Results tiles — same four numbers whatever the scope */}
-      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Closed Won" value={totals.hasData ? money(totals.closedWon) : "—"} sub={rangeSub(range)} accent />
-        <StatTile label="New Pipeline" value={totals.hasData ? money(totals.newPipeline) : "—"} sub={pipelineSub(totals.closedWon, totals.newPipeline)} />
-        <StatTile label="Meetings Held" value={totals.hasData ? num(totals.meetingsHeld) : "—"} sub={totals.hasData ? `of ${num(totals.meetingsScheduled)} scheduled` : undefined} />
-        <StatTile
-          label="Hold Rate"
-          value={totals.holdRate != null ? pct(totals.holdRate * 100) : "—"}
-          sub={totals.holdRate != null ? "held ÷ scheduled" : "no meetings in range"}
-        />
-      </div>
+      {/* Custom month range */}
+      {range === "custom" && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-ink-2">
+          <span>From</span>
+          <input
+            type="month"
+            value={customFrom}
+            min="2026-01"
+            max={customTo}
+            onChange={(e) => e.target.value && setCustomPersist(e.target.value, customTo)}
+            className="rounded-[8px] border border-border bg-surface px-2 py-1 text-[13px] text-ink"
+          />
+          <span>to</span>
+          <input
+            type="month"
+            value={customTo}
+            min={customFrom}
+            onChange={(e) => e.target.value && setCustomPersist(customFrom, e.target.value)}
+            className="rounded-[8px] border border-border bg-surface px-2 py-1 text-[13px] text-ink"
+          />
+          <span className="text-ink-3">
+            {months.length} month{months.length === 1 ? "" : "s"}
+          </span>
+        </div>
+      )}
 
-      {!totals.hasData && (
+      {/* Section toggle: Results vs activity channels (aggregate view) */}
+      {!single && (
+        <div className="mb-4 flex w-max overflow-hidden rounded-[10px] border border-border bg-surface text-[13px]">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSectionPersist(s.key)}
+              className={clsx(
+                "border-r border-border px-4 py-1.5 last:border-r-0",
+                s.key === section ? "bg-gold-soft font-medium text-ink" : "text-ink-2 hover:text-ink"
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Results tiles — the five headline numbers */}
+      {(single || section === "results") && (
+        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <StatTile label="Closed Won" value={totals.hasData ? money(totals.closedWon) : "—"} sub={rangeSub(range)} accent />
+          <StatTile label="New Pipeline" value={totals.hasData ? money(totals.newPipeline) : "—"} sub={pipelineSub(totals.closedWon, totals.newPipeline)} />
+          <StatTile label="Meetings Scheduled" value={totals.hasData ? num(totals.meetingsScheduled) : "—"} sub={rangeSub(range)} />
+          <StatTile label="Meetings Held" value={totals.hasData ? num(totals.meetingsHeld) : "—"} sub={totals.hasData ? `of ${num(totals.meetingsScheduled)} scheduled` : undefined} />
+          <StatTile
+            label="Hold Rate"
+            value={totals.holdRate != null ? pct(totals.holdRate * 100) : "—"}
+            sub={totals.holdRate != null ? "held ÷ scheduled" : "no meetings in range"}
+          />
+        </div>
+      )}
+
+      {(single || section === "results") && !totals.hasData && (
         <Card className="mb-4 p-4 text-[13.5px] text-ink-2">
           No results recorded in this range for the selected {selected.length === 1 ? "client" : "clients"}. Historical
           results run January–June 2026; new months appear as they're entered or arrive from connectors.
@@ -171,7 +251,7 @@ export default function DashboardPage() {
       )}
 
       {/* Meetings month over month */}
-      {totals.hasData && months.length > 1 && (
+      {(single || section === "results") && totals.hasData && months.length > 1 && (
         <Card className="mb-4 p-5">
           <SectionTitle icon={<Trophy size={16} />} title="Meetings — month over month" right={<span className="text-[12px] text-ink-3">source: results import + live entries</span>} />
           <MonthBars points={series} />
@@ -185,7 +265,7 @@ export default function DashboardPage() {
           <EmailPanel clientId={single} />
           <LivePanel clientId={single} />
         </div>
-      ) : (
+      ) : section === "results" ? (
         <ClientsTable
           clientIds={selected}
           rows={rows}
@@ -193,6 +273,12 @@ export default function DashboardPage() {
           totals={totals}
           onPick={(id) => setSelectedPersist([id])}
         />
+      ) : section === "calls" ? (
+        <AggCallsSection selected={selected} months={months} />
+      ) : section === "email" ? (
+        <AggEmailSection selected={selected} />
+      ) : (
+        <AggLinkedInSection selected={selected} />
       )}
 
       <p className="mt-4 text-[11px] text-ink-3">
@@ -204,7 +290,10 @@ export default function DashboardPage() {
 }
 
 function rangeSub(range: RangeKey): string {
-  return range === "ytd" ? "year to date" : range === "quarter" ? "this quarter" : "this month";
+  if (range === "ytd") return "year to date";
+  if (range === "quarter") return "this quarter";
+  if (range === "custom") return "custom range";
+  return "this month";
 }
 
 function pipelineSub(closedWon: number, pipeline: number): string | undefined {

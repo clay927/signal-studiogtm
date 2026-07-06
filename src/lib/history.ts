@@ -3,20 +3,37 @@
 // dashboard comes from these tested functions.
 import type { MonthlyResults } from "./historical";
 
-export type RangeKey = "this_month" | "quarter" | "ytd";
+export type RangeKey = "this_month" | "quarter" | "ytd" | "custom";
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
   this_month: "This month",
   quarter: "Quarter",
   ytd: "YTD",
+  custom: "Custom",
 };
+
+/** Inclusive month span between two YYYY-MM keys (order-tolerant, capped at 36 months). */
+export function monthsBetween(from: string, to: string): string[] {
+  const parse = (s: string) => {
+    const m = /^(\d{4})-(\d{2})$/.exec(s);
+    return m ? Number(m[1]) * 12 + (Number(m[2]) - 1) : null;
+  };
+  let a = parse(from);
+  let b = parse(to);
+  if (a == null || b == null) return [];
+  if (a > b) [a, b] = [b, a];
+  b = Math.min(b, a + 35);
+  const months: string[] = [];
+  for (let i = a; i <= b; i++) months.push(`${Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, "0")}`);
+  return months;
+}
 
 export function monthKey(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-/** Months (YYYY-MM) covered by a range, from range start through the current month. */
-export function monthsForRange(range: RangeKey, now: Date): string[] {
+/** Months (YYYY-MM) covered by a preset range, from range start through the current month. */
+export function monthsForRange(range: Exclude<RangeKey, "custom">, now: Date): string[] {
   const y = now.getUTCFullYear();
   const m = now.getUTCMonth(); // 0-based
   const startMonth = range === "this_month" ? m : range === "quarter" ? Math.floor(m / 3) * 3 : 0;

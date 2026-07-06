@@ -17,7 +17,7 @@ import {
 } from "@/lib/historical";
 import { clientMeta } from "@/lib/clients";
 
-function FunnelTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+export function FunnelTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-[10px] border border-border bg-surface-2 px-3.5 py-3">
       <p className="text-[11px] uppercase tracking-wide text-ink-3">{label}</p>
