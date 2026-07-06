@@ -180,4 +180,5 @@ export interface User {
   role: Role;
   clientAccess: string[] | "all"; // client ids, or "all" for owners
   seesBilling: boolean;
+  avatar?: string; // data URL, stored on the user record
 }

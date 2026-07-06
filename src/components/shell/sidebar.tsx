@@ -26,24 +26,14 @@ export function Sidebar() {
   const isOwner = user.clientAccess === "all";
   const [avatar, setAvatar] = useState<string | null>(null);
 
-  // Profile photo (stored per user on this device); refreshes when the
-  // Profile page saves a new one.
+  // Profile photo comes with the login (stored on the user record); the
+  // Profile page broadcasts an event for an instant swap after upload.
   useEffect(() => {
-    const read = () => {
-      try {
-        setAvatar(localStorage.getItem(`signal.avatar.${user.id}`));
-      } catch {
-        setAvatar(null);
-      }
-    };
-    read();
-    window.addEventListener("pando-avatar-updated", read);
-    window.addEventListener("storage", read);
-    return () => {
-      window.removeEventListener("pando-avatar-updated", read);
-      window.removeEventListener("storage", read);
-    };
-  }, [user.id]);
+    setAvatar(user.avatar || null);
+    const onUpdate = (e: Event) => setAvatar((e as CustomEvent<string>).detail || null);
+    window.addEventListener("pando-avatar-updated", onUpdate);
+    return () => window.removeEventListener("pando-avatar-updated", onUpdate);
+  }, [user.avatar]);
 
   return (
     <aside className="flex h-dvh w-[232px] shrink-0 flex-col bg-sidebar px-3 py-4 text-sidebar-ink">

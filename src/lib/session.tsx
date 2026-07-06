@@ -57,6 +57,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             role: u.role,
             clientAccess: isOwner ? "all" : u.clientAccess ?? [],
             seesBilling: u.role === "owner" || u.role === "client",
+            avatar: u.avatar || "",
           });
         } else {
           window.location.assign("/login");

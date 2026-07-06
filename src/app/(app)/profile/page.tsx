@@ -26,30 +26,77 @@ export default function ProfilePage() {
   const [resetErr, setResetErr] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const avatarKey = `signal.avatar.${user.id}`;
+  // Avatar lives on the user record (follows the login across devices).
+  // One-time migration: if this device still has the old browser-local photo
+  // and the account has none, upload it.
+  const legacyKey = `signal.avatar.${user.id}`;
   useEffect(() => {
-    try {
-      setAvatar(localStorage.getItem(avatarKey));
-    } catch {
-      setAvatar(null);
+    setAvatar(user.avatar || null);
+    if (!user.avatar) {
+      try {
+        const legacy = localStorage.getItem(legacyKey);
+        if (legacy) {
+          saveAvatar(legacy).then((ok) => {
+            if (ok) localStorage.removeItem(legacyKey);
+          });
+        }
+      } catch {
+        // no legacy photo
+      }
     }
-  }, [avatarKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.avatar, legacyKey]);
+
+  async function saveAvatar(url: string): Promise<boolean> {
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: url }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setAvatar(url);
+        window.dispatchEvent(new CustomEvent("pando-avatar-updated", { detail: url }));
+        return true;
+      }
+    } catch {
+      // server unreachable — photo shows locally this session only
+    }
+    setAvatar(url);
+    window.dispatchEvent(new CustomEvent("pando-avatar-updated", { detail: url }));
+    return false;
+  }
+
+  /** Downscale to a 256px square-ish JPEG so the stored record stays small. */
+  function resizeImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const max = 256;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(objUrl);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        reject(new Error("could not read image"));
+      };
+      img.src = objUrl;
+    });
+  }
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = String(reader.result);
-      setAvatar(url);
-      try {
-        localStorage.setItem(avatarKey, url);
-        window.dispatchEvent(new Event("pando-avatar-updated")); // sidebar picks it up
-      } catch {
-        // image too large for storage — keep in memory
-      }
-    };
-    reader.readAsDataURL(file);
+    resizeImage(file)
+      .then(saveAvatar)
+      .catch(() => {});
   }
 
   async function resetPassword() {

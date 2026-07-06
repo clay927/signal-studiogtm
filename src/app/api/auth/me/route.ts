@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     if (!u || u.status !== "active") return NextResponse.json({ ok: false, user: null }, { status: 401 });
     return NextResponse.json({
       ok: true,
-      user: { id: u.id, name: u.name, email: u.email, role: u.role, clientAccess: u.client_access, status: u.status },
+      user: { id: u.id, name: u.name, email: u.email, role: u.role, clientAccess: u.client_access, status: u.status, avatar: u.avatar || "" },
     });
   } catch {
     return NextResponse.json({ ok: false, user: null }, { status: 503 });

@@ -57,6 +57,7 @@ const SCHEMA_STATEMENTS = [
    )`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token text NOT NULL DEFAULT ''`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar text NOT NULL DEFAULT ''`,
   `ALTER TABLE client_settings ADD COLUMN IF NOT EXISTS terms text NOT NULL DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS results_monthly (
      client_id text NOT NULL,
@@ -324,12 +325,13 @@ export interface AuthUser {
   client_access: string[];
   status: string;
   password_hash: string;
+  avatar: string;
 }
 
 export async function getUserByEmail(email: string): Promise<AuthUser | null> {
   const sql = await db();
   const rows = await sql`
-    SELECT id, name, email, role, client_access, status, password_hash
+    SELECT id, name, email, role, client_access, status, password_hash, avatar
     FROM users WHERE lower(email) = lower(${email}) LIMIT 1
   `;
   return (rows[0] as AuthUser) ?? null;
@@ -338,10 +340,15 @@ export async function getUserByEmail(email: string): Promise<AuthUser | null> {
 export async function getUserById(id: string): Promise<AuthUser | null> {
   const sql = await db();
   const rows = await sql`
-    SELECT id, name, email, role, client_access, status, password_hash
+    SELECT id, name, email, role, client_access, status, password_hash, avatar
     FROM users WHERE id = ${id} LIMIT 1
   `;
   return (rows[0] as AuthUser) ?? null;
+}
+
+export async function setUserAvatar(id: string, avatar: string): Promise<void> {
+  const sql = await db();
+  await sql`UPDATE users SET avatar = ${avatar} WHERE id = ${id}`;
 }
 
 export async function getUserByInviteToken(token: string): Promise<AuthUser | null> {
