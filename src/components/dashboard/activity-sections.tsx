@@ -2,13 +2,14 @@
 
 // Aggregate (book-wide) activity sections for the Main Dashboard section
 // toggle. Same accuracy rules as everywhere: month-filtered sums come only
-// from monthly rows + live events; all-time exports are shown separately and
-// clearly labeled, never mixed into a filtered total.
+// from monthly rows + live events; all-time exports and different-taxonomy
+// datasets are shown separately and clearly labeled, never mixed into a
+// filtered funnel total.
 
 import { useEffect, useState } from "react";
 import { Phone, Contact, Mail } from "lucide-react";
 import { Card, SectionTitle, EmptyState, Pill } from "@/components/ui";
-import { FunnelTile } from "@/components/dashboard/client-detail";
+import { CallStats, FunnelTile } from "@/components/dashboard/client-detail";
 import { num, ratePct } from "@/lib/format";
 import { monthKey } from "@/lib/history";
 import { clientName } from "@/lib/clients";
@@ -18,20 +19,23 @@ import {
   FLAX_CALL_TOTALS,
   FLAX_LINKEDIN_CAMPAIGNS,
   FLAX_LINKEDIN_TOTALS,
+  YETI_CALL_WEEKS,
 } from "@/lib/historical";
 
 interface CallTotals {
   dials: number;
+  callbacks: number | null;
   connects: number;
   conversations: number;
   meetings: number;
 }
 
-const ZERO: CallTotals = { dials: 0, connects: 0, conversations: 0, meetings: 0 };
+const ZERO: CallTotals = { dials: 0, callbacks: null, connects: 0, conversations: 0, meetings: 0 };
 
 function addTotals(a: CallTotals, b: CallTotals): CallTotals {
   return {
     dials: a.dials + b.dials,
+    callbacks: b.callbacks != null ? (a.callbacks ?? 0) + b.callbacks : a.callbacks,
     connects: a.connects + b.connects,
     conversations: a.conversations + b.conversations,
     meetings: a.meetings + b.meetings,
@@ -61,7 +65,7 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
       if (!on) return;
       const map: Record<string, CallTotals> = {};
       for (const [id, m] of pairs) {
-        if (m) map[id] = { dials: m.dials, connects: m.connects, conversations: m.conversations, meetings: m.meetings };
+        if (m) map[id] = { dials: m.dials, callbacks: null, connects: m.connects, conversations: m.conversations, meetings: m.meetings };
       }
       setLive(map);
     });
@@ -72,7 +76,7 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
   const perClient = new Map<string, CallTotals>();
   for (const id of selected) {
     const hist = CALLS_MONTHLY.filter((r) => r.clientId === id && monthSet.has(r.month)).reduce(
-      (a, r) => addTotals(a, { dials: r.dials, connects: r.connects, conversations: r.conversations, meetings: r.meetings }),
+      (a, r) => addTotals(a, { dials: r.dials, callbacks: r.callbacks, connects: r.connects, conversations: r.conversations, meetings: r.meetings }),
       ZERO
     );
     const withLive = live[id] ? addTotals(hist, live[id]) : hist;
@@ -81,7 +85,16 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
   const total = [...perClient.values()].reduce(addTotals, ZERO);
   const flaxSelected = selected.includes("flax");
 
-  if (perClient.size === 0 && !flaxSelected) {
+  // YetiConnect weekly rollups (own taxonomy) — shown as a separate labeled
+  // row, never mixed into the funnel totals above it.
+  const yetiWeeks = selected.includes("yeticonnect")
+    ? YETI_CALL_WEEKS.filter((w) => monthSet.has(w.weekStart.slice(0, 7)))
+    : [];
+  const yeti = yetiWeeks.length
+    ? { dials: yetiWeeks.reduce((a, w) => a + w.callsMade, 0), meetings: yetiWeeks.reduce((a, w) => a + w.meetingsBooked, 0) }
+    : null;
+
+  if (perClient.size === 0 && !flaxSelected && !yeti) {
     return (
       <Card className="p-5">
         <SectionTitle icon={<Phone size={16} />} title="Calls — all selected clients" />
@@ -102,17 +115,13 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
       />
       {perClient.size > 0 && (
         <>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <FunnelTile label="Dials" value={num(total.dials)} />
-            <FunnelTile label="Connects" value={num(total.connects)} sub={`${ratePct(total.connects, total.dials)} of dials`} />
-            <FunnelTile label="Conversations" value={num(total.conversations)} sub={`${ratePct(total.conversations, total.connects)} of connects`} />
-            <FunnelTile label="Meetings" value={num(total.meetings)} sub={`${ratePct(total.meetings, total.conversations)} of conversations`} />
-          </div>
+          <CallStats dials={total.dials} callbacks={total.callbacks} connects={total.connects} conversations={total.conversations} meetings={total.meetings} />
           <table className="mt-4 w-full text-[12.5px]">
             <thead>
               <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-ink-3">
                 <th className="py-1.5 font-medium">Client</th>
                 <th className="py-1.5 text-right font-medium">Dials</th>
+                <th className="py-1.5 text-right font-medium">Callbacks</th>
                 <th className="py-1.5 text-right font-medium">Connects</th>
                 <th className="py-1.5 text-right font-medium">Conversations</th>
                 <th className="py-1.5 text-right font-medium">Meetings</th>
@@ -126,14 +135,38 @@ export function AggCallsSection({ selected, months }: { selected: string[]; mont
                     {live[id] && <Pill tone="gold"> live</Pill>}
                   </td>
                   <td className="tabular py-1.5 text-right text-ink">{num(t.dials)}</td>
+                  <td className="tabular py-1.5 text-right text-ink">{t.callbacks != null ? num(t.callbacks) : "—"}</td>
                   <td className="tabular py-1.5 text-right text-ink">{num(t.connects)}</td>
                   <td className="tabular py-1.5 text-right text-ink">{num(t.conversations)}</td>
                   <td className="tabular py-1.5 text-right text-ink">{num(t.meetings)}</td>
                 </tr>
               ))}
+              {yeti && (
+                <tr className="border-b border-border/60 last:border-0">
+                  <td className="py-1.5 text-ink">YetiConnect <span className="text-ink-3">†</span></td>
+                  <td className="tabular py-1.5 text-right text-ink">{num(yeti.dials)}</td>
+                  <td className="tabular py-1.5 text-right text-ink-3">—</td>
+                  <td className="tabular py-1.5 text-right text-ink-3">—</td>
+                  <td className="tabular py-1.5 text-right text-ink-3">—</td>
+                  <td className="tabular py-1.5 text-right text-ink">{num(yeti.meetings)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
+          {yeti && (
+            <p className="mt-2 text-[11.5px] text-ink-3">
+              † YetiConnect's tracker uses its own outcome taxonomy (no connect/conversation counts), so it's excluded from
+              the funnel totals above. Scope to YetiConnect for the full breakdown.
+            </p>
+          )}
         </>
+      )}
+
+      {perClient.size === 0 && yeti && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <FunnelTile label="Dials" value={num(yeti.dials)} sub="YetiConnect tracker" />
+          <FunnelTile label="Meetings" value={num(yeti.meetings)} sub="YetiConnect tracker" />
+        </div>
       )}
 
       {flaxSelected && (

@@ -139,7 +139,62 @@ export interface CallList {
     out.append("];\n")
 
     out.append("// All-time Flax dial totals across all dialer segments (workbook header).")
-    out.append("export const FLAX_CALL_TOTALS = { dials: 9578, connects: 405, conversations: 196, meetings: 29 };")
+    out.append("export const FLAX_CALL_TOTALS = { dials: 9578, connects: 405, conversations: 196, meetings: 29 };\n")
+
+    # YetiConnect: weekly outcome rollups (Nooks taxonomy — NOT mapped to
+    # connects/conversations; shown as-is until Clay defines the mapping).
+    yweeks = read("yeticonnect_call_weeks.csv")
+    out.append("export interface YetiCallWeek {")
+    out.append("  weekLabel: string;")
+    out.append("  weekStart: string; // week is assigned to the month this date falls in")
+    out.append("  weekEnd: string;")
+    out.append("  callsMade: number;")
+    out.append("  meetingsBooked: number;")
+    out.append("  outcomes: { label: string; count: number }[];")
+    out.append("}\n")
+    OUTCOME_COLS = [
+        ("meetings_booked", "Meetings Booked"),
+        ("email_follow_up_requested", "Email Follow Up Requested"),
+        ("elevator_pitch_rejected", "Elevator Pitch Rejected"),
+        ("connected", "Connected"),
+        ("referral", "Referral"),
+        ("no_longer_with_company", "No Longer with Company"),
+        ("wrong_icp", "Wrong ICP"),
+        ("wrong_number", "Wrong Number"),
+        ("busy_call_later", "Busy, Call Later"),
+        ("left_voicemail", "Left Voicemail"),
+        ("no_answer", "No Answer"),
+        ("other", "Other"),
+    ]
+    out.append("export const YETI_CALL_WEEKS: YetiCallWeek[] = [")
+    for r in yweeks:
+        outcomes = ", ".join(
+            f'{{ label: "{label}", count: {num(r[col])} }}' for col, label in OUTCOME_COLS if float(r[col] or 0) > 0
+        )
+        out.append(
+            f'  {{ weekLabel: "{r["week_label"]}", weekStart: "{r["week_start"]}", weekEnd: "{r["week_end"]}", callsMade: {num(r["calls_made"])}, meetingsBooked: {num(r["meetings_booked"])}, outcomes: [{outcomes}] }},'
+        )
+    out.append("];\n")
+
+    # YetiConnect: contact-level call log from the tracker's outcome tabs.
+    ylog = read("yeticonnect_call_log.csv")
+    out.append("export interface HistoricalCall {")
+    out.append("  outcome: string;")
+    out.append("  name: string;")
+    out.append("  company: string;")
+    out.append("  list: string;")
+    out.append("  rep: string;")
+    out.append("  calledAt: string;")
+    out.append("  transcript: string;")
+    out.append("}\n")
+    out.append("export const YETI_CALL_LOG: HistoricalCall[] = [")
+    for r in ylog:
+        def esc(s):
+            return (s or "").replace("\\", "\\\\").replace('"', '\\"')
+        out.append(
+            f'  {{ outcome: "{esc(r["outcome"])}", name: "{esc(r["name"])}", company: "{esc(r["company"])}", list: "{esc(r["list"])}", rep: "{esc(r["rep"])}", calledAt: "{esc(r["called_at"])}", transcript: "{esc(r["transcript"])}" }},'
+        )
+    out.append("];")
 
     with open("src/lib/historical.ts", "w") as fh:
         fh.write("\n".join(out) + "\n")
