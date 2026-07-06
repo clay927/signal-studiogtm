@@ -17,9 +17,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Signal — StudioGTM",
+  title: "Pando — StudioGTM",
   description:
-    "Signal is StudioGTM's single source of truth: results, activity, and insights for every client engagement.",
+    "Pando is StudioGTM's single source of truth: results, activity, and insights for every client engagement.",
 };
 
 export default function RootLayout({

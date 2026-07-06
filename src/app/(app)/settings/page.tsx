@@ -85,7 +85,7 @@ export default function SettingsPage() {
         <Card className="p-5">
           <SectionTitle icon={<Lock size={16} />} title="Contracts & billing" />
           <p className="text-[13.5px] text-ink-2">
-            Contracts and agreements live in each client&apos;s shared Drive (04 — Agreements &amp; SOW). Billing management isn&apos;t part of this version of Signal.
+            Contracts and agreements live in each client&apos;s shared Drive (04 — Agreements &amp; SOW). Billing management isn&apos;t part of this version of Pando.
           </p>
         </Card>
       </div>
@@ -182,7 +182,7 @@ function IntakeForm({ onClose }: { onClose: () => void }) {
     <div className="mb-4 rounded-[12px] border border-gold-line bg-surface-2 p-4">
       <p className="mb-1 text-[13.5px] font-medium text-ink">New client intake</p>
       <p className="mb-3 text-[12.5px] text-ink-2">
-        On submit, Signal creates the client, provisions a shared Drive, and emails an onboarding invite with a Signal login.
+        On submit, Pando creates the client, provisions a shared Drive, and emails an onboarding invite with a Pando login.
       </p>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Field label="Company name" placeholder="Acme Health" />

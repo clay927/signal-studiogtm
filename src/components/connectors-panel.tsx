@@ -89,11 +89,11 @@ export function ConnectorsPanel() {
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="flex items-start gap-2 rounded-[10px] bg-surface-2 p-3 text-[12.5px] text-ink-2">
           <Webhook size={16} className="mt-0.5 shrink-0 text-gold" />
-          <span><span className="font-medium text-ink">Webhook</span> — the tool pushes events to Signal in real time. Paste the URL below into the tool.</span>
+          <span><span className="font-medium text-ink">Webhook</span> — the tool pushes events to Pando in real time. Paste the URL below into the tool.</span>
         </div>
         <div className="flex items-start gap-2 rounded-[10px] bg-surface-2 p-3 text-[12.5px] text-ink-2">
           <KeyRound size={16} className="mt-0.5 shrink-0 text-gold" />
-          <span><span className="font-medium text-ink">API key</span> — lets Signal pull from the tool for history/backfills. Optional.</span>
+          <span><span className="font-medium text-ink">API key</span> — lets Pando pull from the tool for history/backfills. Optional.</span>
         </div>
       </div>
 

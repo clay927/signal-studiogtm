@@ -43,9 +43,9 @@ export default function SetPasswordPage() {
     <div className="flex min-h-dvh items-center justify-center bg-page px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-navy text-[20px] font-medium text-gold">S</span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-navy text-[20px] font-medium text-gold">P</span>
           <h1 className="text-[20px] font-medium text-ink">Set your password</h1>
-          <p className="text-[13px] text-ink-2">Choose a password to access Signal</p>
+          <p className="text-[13px] text-ink-2">Choose a password to access Pando</p>
         </div>
 
         <form onSubmit={submit} className="rounded-[16px] border border-border bg-surface p-6">

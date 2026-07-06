@@ -42,9 +42,9 @@ export function Sidebar() {
     <aside className="flex h-dvh w-[232px] shrink-0 flex-col bg-sidebar px-3 py-4 text-sidebar-ink">
       <Link href="/" className="mb-6 flex items-center gap-2.5 px-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-gold text-[15px] font-medium text-navy-deep">
-          S
+          P
         </span>
-        <span className="text-[16px] font-medium text-sidebar-ink-active">Signal</span>
+        <span className="text-[16px] font-medium text-sidebar-ink-active">Pando</span>
       </Link>
 
       <nav className="flex flex-col gap-1">

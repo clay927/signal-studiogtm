@@ -90,7 +90,7 @@ function ChannelEmpty({ tool, channel }: { tool: string; channel: string }) {
     <Card className="p-6 text-center">
       <p className="text-[15px] font-medium text-ink">No {channel} data yet</p>
       <p className="mx-auto mt-1 max-w-md text-[13.5px] text-ink-2">
-        Connect {tool} in Settings → Connectors (paste Signal&apos;s webhook URL into {tool}) and {channel} activity streams in here.
+        Connect {tool} in Settings → Connectors (paste Pando&apos;s webhook URL into {tool}) and {channel} activity streams in here.
       </p>
     </Card>
   );

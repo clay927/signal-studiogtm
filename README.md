@@ -1,6 +1,6 @@
-# Signal — StudioGTM
+# Pando — StudioGTM
 
-Signal is StudioGTM's single source of truth: results, activity, projects, and
+Pando is StudioGTM's single source of truth: results, activity, projects, and
 insights for every client engagement. It embodies the StudioGTM value to
 **over-communicate** — clients, reps, and owners all see the same reporting,
 scoped by access.
@@ -39,7 +39,7 @@ All numbers are currently **sample data** (clearly labeled in the UI). The types
 in `src/lib/types.ts` mirror the StudioGTM Google Sheet workbook contract so live
 data is a drop-in swap:
 
-| Signal type | Source workbook |
+| Pando type | Source workbook |
 | --- | --- |
 | `ResultsSummary` + `Meeting[]` | Results workbook (tab per client) |
 | `PhoneStats` | Calls workbook |

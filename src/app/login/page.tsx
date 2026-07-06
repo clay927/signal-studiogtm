@@ -35,8 +35,8 @@ export default function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-page px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-navy text-[20px] font-medium text-gold">S</span>
-          <h1 className="text-[20px] font-medium text-ink">Sign in to Signal</h1>
+          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-navy text-[20px] font-medium text-gold">P</span>
+          <h1 className="text-[20px] font-medium text-ink">Sign in to Pando</h1>
           <p className="text-[13px] text-ink-2">StudioGTM client operating system</p>
         </div>
 

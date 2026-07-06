@@ -83,7 +83,7 @@ export default function BrainPage() {
         <div>
           <h1 className="text-[22px] font-medium text-ink">Client brain</h1>
           <p className="mt-0.5 text-[14px] text-ink-2">
-            The living record of the engagement. Files stay in your Drive — Signal keeps the story.
+            The living record of the engagement. Files stay in your Drive — Pando keeps the story.
           </p>
         </div>
         <SampleBadge />
@@ -98,7 +98,7 @@ export default function BrainPage() {
           right={<DriveLink href={d.data} label="01 — Data packet" />}
         >
           <p className="text-[13.5px] text-ink-2">
-            High-level storage only — the heavy lifting stays in your data tools. Signal keeps the map and the supporting files a click away.
+            High-level storage only — the heavy lifting stays in your data tools. Pando keeps the map and the supporting files a click away.
           </p>
         </BrainSection>
 
