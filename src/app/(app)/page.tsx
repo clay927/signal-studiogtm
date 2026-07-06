@@ -2,13 +2,12 @@
 
 import { useSession } from "@/lib/session";
 import { useData } from "@/lib/store";
-import { StatTile, SampleBadge, SectionTitle, UpdatedStamp, Card } from "@/components/ui";
+import { StatTile, SampleBadge, UpdatedStamp, Card } from "@/components/ui";
 import { WinsFeed } from "@/components/wins-feed";
 import { BenchmarkBars } from "@/components/benchmark-bars";
-import { ProjectTracker } from "@/components/project-tracker";
 import { money, num, pct } from "@/lib/format";
 import { holdStatus } from "@/lib/metrics";
-import { ListChecks, Rocket } from "lucide-react";
+import { Rocket } from "lucide-react";
 
 export default function HomePage() {
   const { clientId } = useSession();
@@ -37,15 +36,9 @@ export default function HomePage() {
               <Rocket size={20} />
             </span>
             <div>
-              <p className="text-[16px] font-medium text-ink">Launching next week</p>
+              <p className="text-[16px] font-medium text-ink">Getting set up</p>
               <p className="mt-1 max-w-xl text-[14px] text-ink-2">{data.insight}</p>
             </div>
-          </div>
-          <div className="mt-5 space-y-3">
-            <SectionTitle icon={<ListChecks size={16} />} title="Onboarding progress" />
-            {data.projects.map((p) => (
-              <ProjectTracker key={p.id} project={p} />
-            ))}
           </div>
           <UpdatedStamp when={data.lastUpdated} />
         </Card>
@@ -84,30 +77,9 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
             <WinsFeed meetings={data.meetings} />
             <BenchmarkBars benchmarks={data.benchmarks} />
-          </div>
-
-          <div>
-            <SectionTitle
-              icon={<ListChecks size={16} />}
-              title="Open projects"
-              right={
-                <span className="text-[12px] text-ink-3">
-                  {data.projects.length} in flight
-                </span>
-              }
-            />
-            <div className="space-y-3">
-              {data.projects.length ? (
-                data.projects.map((p) => <ProjectTracker key={p.id} project={p} />)
-              ) : (
-                <Card className="p-4">
-                  <p className="text-[13px] text-ink-2">No open projects this period.</p>
-                </Card>
-              )}
-            </div>
           </div>
 
           <UpdatedStamp when={data.lastUpdated} />

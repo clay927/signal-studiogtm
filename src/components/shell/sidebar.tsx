@@ -8,8 +8,6 @@ import {
   LayoutDashboard,
   Trophy,
   Activity,
-  ListChecks,
-  Brain,
   Building2,
   Settings,
   Sun,
@@ -26,8 +24,6 @@ const NAV = [
   { href: "/", label: "Home", icon: LayoutDashboard },
   { href: "/results", label: "Results", icon: Trophy },
   { href: "/activity", label: "Activity", icon: Activity },
-  { href: "/projects", label: "Projects", icon: ListChecks },
-  { href: "/brain", label: "Client brain", icon: Brain },
 ];
 
 export function Sidebar() {
