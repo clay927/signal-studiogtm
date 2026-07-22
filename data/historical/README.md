@@ -1,4 +1,4 @@
-# Pando — Historical data staging (v2 rebuild)
+# Signal — Historical data staging (v2 rebuild)
 
 Assembled 2026-07-06 from Clay's exports. These files feed the one-time historical
 import; going forward the same DB tables are fed live by webhooks.

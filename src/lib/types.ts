@@ -1,4 +1,4 @@
-// Pando data model.
+// Signal data model.
 // These types intentionally mirror the StudioGTM Google Sheet contract so that
 // swapping mock data for live, admin-vetted workbook rows is a drop-in change:
 //   Results workbook  -> ResultsSummary + Meeting[]

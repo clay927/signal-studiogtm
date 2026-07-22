@@ -1,8 +1,8 @@
 import Papa from "papaparse";
 import type { Meeting, MeetingStage } from "./types";
 
-// Parse a vetted Results/meetings CSV into Pando meeting rows.
-// Accepts the current YetiConnect tracker headers AND the Pando template
+// Parse a vetted Results/meetings CSV into Signal meeting rows.
+// Accepts the current YetiConnect tracker headers AND the Signal template
 // headers, so exports from either work. Every row is validated; problems are
 // reported (never silently dropped) so you can trust what came in.
 

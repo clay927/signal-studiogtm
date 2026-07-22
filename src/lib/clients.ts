@@ -1,4 +1,4 @@
-// Client roster for Pando v2. Derived from the historical import (the
+// Client roster for Signal v2. Derived from the historical import (the
 // "MSP Results" sheet is canonical for who our clients are/were); DB
 // client_settings can override status via Settings later.
 import { CLIENT_ROSTER, type ClientMeta } from "./historical";

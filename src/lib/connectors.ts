@@ -1,5 +1,5 @@
-// Catalog of tools Pando can ingest from. Each connector exposes an inbound
-// webhook URL (tool -> Pando). Real-time, no manual exports.
+// Catalog of tools Signal can ingest from. Each connector exposes an inbound
+// webhook URL (tool -> Signal). Real-time, no manual exports.
 
 export type ConnectorCategory = "dialer" | "email" | "linkedin" | "enablement";
 
@@ -10,7 +10,7 @@ export interface ConnectorDef {
   webhooks: boolean;
   docsUrl?: string;
   logoDomain?: string; // used to render the tool's logo
-  feeds: string; // plain-English: what data it sends into Pando
+  feeds: string; // plain-English: what data it sends into Signal
 }
 
 export const CONNECTORS: ConnectorDef[] = [

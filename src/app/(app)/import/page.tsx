@@ -70,7 +70,7 @@ export default function ImportPage() {
         <div>
           <h1 className="text-[22px] font-medium text-ink">Import data</h1>
           <p className="mt-0.5 flex items-center gap-2 text-[14px] text-ink-2">
-            Upload a vetted CSV for <ClientSelect />. Pando checks every row, then shows you exactly what it computed.
+            Upload a vetted CSV for <ClientSelect />. Signal checks every row, then shows you exactly what it computed.
           </p>
         </div>
         <SampleBadge />
@@ -157,7 +157,7 @@ export default function ImportPage() {
           {preview && result.meetings.length > 0 && (
             <>
               <div className="mt-5">
-                <SectionTitle title="What Pando calculated from this file" />
+                <SectionTitle title="What Signal calculated from this file" />
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   <StatTile label="Closed won" value={money(preview.closedWon)} status="good" accent />
                   <StatTile label="New pipeline" value={money(preview.newPipeline)} sub={`${preview.pipelineOpps} opps`} status="good" />

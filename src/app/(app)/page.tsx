@@ -1,6 +1,6 @@
 "use client";
 
-// Main Dashboard — the one screen that runs Pando v2.
+// Main Dashboard — the one screen that runs Signal v2.
 // Aggregate view: the whole book (or any filtered set) side by side.
 // Scoped view (exactly one client selected): that client's full results +
 // activity story in a single scroll.
@@ -36,10 +36,10 @@ import {
 import { money, num, pct } from "@/lib/format";
 
 const RANGES: RangeKey[] = ["this_month", "quarter", "ytd", "custom"];
-const SCOPE_KEY = "pando.dashboard.scope";
-const RANGE_KEY = "pando.dashboard.range";
-const CUSTOM_KEY = "pando.dashboard.customRange";
-const SECTION_KEY = "pando.dashboard.section";
+const SCOPE_KEY = "signal.dashboard.scope";
+const RANGE_KEY = "signal.dashboard.range";
+const CUSTOM_KEY = "signal.dashboard.customRange";
+const SECTION_KEY = "signal.dashboard.section";
 
 type SectionKey = "results" | "calls" | "email" | "linkedin";
 const SECTIONS: { key: SectionKey; label: string }[] = [
@@ -282,7 +282,7 @@ export default function DashboardPage() {
       )}
 
       <p className="mt-4 text-[11px] text-ink-3">
-        Results source: MSP Results import (Jan–Jun 2026) + Pando entries · rates computed by the tested metrics engine · no
+        Results source: MSP Results import (Jan–Jun 2026) + Signal entries · rates computed by the tested metrics engine · no
         estimated or filler numbers.
       </p>
     </div>

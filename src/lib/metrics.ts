@@ -1,4 +1,4 @@
-// Pando metrics engine — the single, audited source of every derived number.
+// Signal metrics engine — the single, audited source of every derived number.
 //
 // ACCURACY CONTRACT: all rate/summary math lives here (not scattered in
 // components) so it can be unit-tested and reasoned about. Definitions are

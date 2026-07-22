@@ -46,7 +46,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ provider: 
   return NextResponse.json({
     ok: true,
     provider,
-    message: `Pando webhook endpoint for "${provider}" is live. Send events via POST.`,
+    message: `Signal webhook endpoint for "${provider}" is live. Send events via POST.`,
   });
 }
 

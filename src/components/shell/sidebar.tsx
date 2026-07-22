@@ -31,8 +31,8 @@ export function Sidebar() {
   useEffect(() => {
     setAvatar(user.avatar || null);
     const onUpdate = (e: Event) => setAvatar((e as CustomEvent<string>).detail || null);
-    window.addEventListener("pando-avatar-updated", onUpdate);
-    return () => window.removeEventListener("pando-avatar-updated", onUpdate);
+    window.addEventListener("signal-avatar-updated", onUpdate);
+    return () => window.removeEventListener("signal-avatar-updated", onUpdate);
   }, [user.avatar]);
 
   return (
@@ -41,7 +41,7 @@ export function Sidebar() {
         <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-gold text-[15px] font-medium text-navy-deep">
           P
         </span>
-        <span className="text-[16px] font-medium text-sidebar-ink-active">Pando</span>
+        <span className="text-[16px] font-medium text-sidebar-ink-active">Signal</span>
       </Link>
 
       <nav className="flex flex-col gap-1">

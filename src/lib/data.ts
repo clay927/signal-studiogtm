@@ -1,7 +1,7 @@
 import type { ClientData, User } from "./types";
 
 // SAMPLE DATA. Every number here is illustrative and clearly labeled as sample
-// in the UI. Real Pando reads from admin-vetted Google Sheet workbooks
+// in the UI. Real Signal reads from admin-vetted Google Sheet workbooks
 // (Results / Calls / Emails / LinkedIn / Active Contacts), then live webhooks.
 // The YetiConnect meeting rows are drawn from a real StudioGTM cold-call tracker.
 

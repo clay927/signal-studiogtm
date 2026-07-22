@@ -87,7 +87,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-page text-[14px] text-ink-2">Loading Pando…</div>
+      <div className="flex min-h-dvh items-center justify-center bg-page text-[14px] text-ink-2">Loading Signal…</div>
     );
   }
 

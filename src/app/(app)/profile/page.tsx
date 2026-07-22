@@ -57,14 +57,14 @@ export default function ProfilePage() {
       const d = await res.json();
       if (d.ok) {
         setAvatar(url);
-        window.dispatchEvent(new CustomEvent("pando-avatar-updated", { detail: url }));
+        window.dispatchEvent(new CustomEvent("signal-avatar-updated", { detail: url }));
         return true;
       }
     } catch {
       // server unreachable — photo shows locally this session only
     }
     setAvatar(url);
-    window.dispatchEvent(new CustomEvent("pando-avatar-updated", { detail: url }));
+    window.dispatchEvent(new CustomEvent("signal-avatar-updated", { detail: url }));
     return false;
   }
 
